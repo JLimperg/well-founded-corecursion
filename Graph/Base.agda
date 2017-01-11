@@ -18,6 +18,7 @@ open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
 open import Size
 
 open import Functor
+open import M
 
 
 Var : Set
@@ -160,6 +161,19 @@ pattern branchP l r = inj₂ (l , r)
 
 branchG : ∀ {i} -> Graph i -> Graph i -> Graph (↑ i)
 unν (branchG l r) = branchP l r
+
+
+data GraphMA : Set where
+  tip branch : GraphMA
+
+
+GraphMB : GraphMA -> Set
+GraphMB tip = ⊥
+GraphMB branch = ⊤ ⊎ ⊤
+
+
+GraphM : Size -> Set
+GraphM = M record { A = GraphMA ; B = GraphMB }
 
 
 expand-input : Set
