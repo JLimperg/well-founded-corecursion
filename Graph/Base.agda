@@ -3,6 +3,9 @@ module Graph.Base where
 
 open import Data.Empty
 open import Data.Nat
+open import Data.List
+open import Data.List.Any
+open import Data.List.Extra
 open import Data.Product
 open import Data.Sum
 open import Data.Unit hiding (_≟_)
@@ -21,6 +24,12 @@ open import Functor
 open import M
 
 
+open Data.List.Any.Membership-≡
+
+
+-- LoopyTree data type and operations
+
+
 Var : Set
 Var = ℕ
 
@@ -30,58 +39,6 @@ data LoopyTree : Set where
   branch : (l r : LoopyTree) -> LoopyTree
   var : (x : Var) -> LoopyTree
   nu : (x : Var) -> (t : LoopyTree) -> LoopyTree
-
-
-var? : (t : LoopyTree) -> Dec (Σ[ x ∈ Var ] (t ≡ var x))
-var? tip = no (λ { (_ , ()) })
-var? (branch t t₁) = no (λ { (_ , ()) })
-var? (var x) = yes (x , refl)
-var? (nu x t) = no (λ { (_ , ()) })
-
-
-data Contractive : LoopyTree -> Set where
-  tip : Contractive tip
-  branch : ∀ {l r} -> Contractive l -> Contractive r -> Contractive (branch l r)
-  var : ∀ x -> Contractive (var x)
-  nu : ∀ {x t} -> False (var? t) -> Contractive t -> Contractive (nu x t)
-
-
-Contractive? : (t : LoopyTree) -> Dec (Contractive t)
-Contractive? tip = yes tip
-Contractive? (branch l r) with Contractive? l | Contractive? r
-... | yes c-l | yes c-r = yes (branch c-l c-r)
-... | no c-l | _ = no λ { (branch c-l' _) -> c-l c-l'}
-... | _ | no c-r = no λ { (branch _ c-r') -> c-r c-r'}
-Contractive? (var x) = yes (var x)
-Contractive? (nu x t) with var? t | Contractive? t
-... | yes (y , eq) | _ rewrite eq = no (λ {(nu contra _) → contra})
-... | no t-novar | yes t-contr = yes (nu (fromWitnessFalse t-novar) t-contr)
-... | no _ | no t-nocontr = no (λ { (nu _ t-contr) -> t-nocontr t-contr })
-
-
-data Free : Var -> LoopyTree -> Set where
-  branch : ∀ {x l r} -> Free x l ⊎ Free x r -> Free x (branch l r)
-  var : ∀ {x} -> Free x (var x)
-  nu : ∀ {x y t} -> x ≢ y -> Free x t -> Free x (nu y t)
-
-
-Free? : (x : Var) -> (t : LoopyTree) -> Dec (Free x t)
-Free? x tip = no λ()
-Free? x (branch l r) with Free? x l | Free? x r
-... | yes l! | _ = yes (branch (inj₁ l!))
-... | _ | yes r! = yes (branch (inj₂ r!))
-... | no l! | no r! = no λ { (branch (inj₁ l!!)) -> l! l!! ; (branch (inj₂ r!!)) -> r! r!! }
-Free? x (var y) with x ≟ y
-... | yes eq rewrite eq = yes var
-... | no neq = no λ { var -> neq refl }
-Free? x (nu y t) with x ≟ y | Free? x t
-... | yes x≡y | _ = no λ { (nu x≢y _) -> x≢y x≡y }
-... | _ | no unfree = no λ { (nu _ free) -> unfree free }
-... | no x≢y | yes free = yes (nu x≢y free)
-
-
-Closed : LoopyTree -> Set
-Closed t = ∀ x -> ¬ Free x t
 
 
 _[_⇒_] : LoopyTree -> Var -> LoopyTree -> LoopyTree
@@ -95,26 +52,16 @@ nu x t [ y ⇒ s ] with x ≟ y
 ... | no _ = nu x (t [ y ⇒ s ])
 
 
+var? : (t : LoopyTree) -> Dec (Σ[ x ∈ Var ] (t ≡ var x))
+var? tip = no (λ { (_ , ()) })
+var? (branch t t₁) = no (λ { (_ , ()) })
+var? (var x) = yes (x , refl)
+var? (nu x t) = no (λ { (_ , ()) })
+
+
 nu-unfold : LoopyTree -> LoopyTree
 nu-unfold (nu x t) = t [ x ⇒ nu x t ]
 nu-unfold t = t
-
-
-nu-prefix-length : LoopyTree -> ℕ
-nu-prefix-length (nu x t) = 1 + nu-prefix-length t
-nu-prefix-length _ = 0
-
-
-subst-preserves-nu-prefix-length : ∀ t x s
-  -> Contractive t
-  -> False (var? t)
-  -> nu-prefix-length (t [ x ⇒ s ]) ≡ nu-prefix-length t
-subst-preserves-nu-prefix-length tip _ _ _ _ = refl
-subst-preserves-nu-prefix-length (branch _ _) _ _ _ _ = refl
-subst-preserves-nu-prefix-length (var _) _ _ _ ()
-subst-preserves-nu-prefix-length (nu x t) y s (nu t-novar t-contr) _ with x ≟ y
-... | yes eq = refl
-... | no neq rewrite subst-preserves-nu-prefix-length t y s t-contr t-novar = refl
 
 
 subst-preserves-not-var : ∀ {t x s}
@@ -126,6 +73,16 @@ subst-preserves-not-var {var x} ()
 subst-preserves-not-var {nu x t} {y} with x ≟ y 
 ... | yes _ = _
 ... | no _ = _
+
+
+-- Contractiveness
+
+
+data Contractive : LoopyTree -> Set where
+  tip : Contractive tip
+  branch : ∀ {l r} -> Contractive l -> Contractive r -> Contractive (branch l r)
+  var : ∀ x -> Contractive (var x)
+  nu : ∀ {x t} -> False (var? t) -> Contractive t -> Contractive (nu x t)
 
 
 subst-preserves-Contractive : ∀ {t x s}
@@ -150,37 +107,71 @@ nu-unfold-contractive c@(var _) = c
 nu-unfold-contractive c@(nu _ c') = subst-preserves-Contractive c' c
 
 
-GraphF : Functor
-GraphF = (|K| ⊤) |+| (|Id| |×| |Id|)
+-- Closedness 
 
 
-Graph : Size -> Set
-Graph i = ν GraphF i
+data ClosedWrt : List Var -> LoopyTree -> Set where
+  tip : ∀ {xs} -> ClosedWrt xs tip
+  branch : ∀ {xs l r} -> ClosedWrt xs l -> ClosedWrt xs r -> ClosedWrt xs (branch l r)
+  var : ∀ {xs x} -> x ∈ xs -> ClosedWrt xs (var x)
+  nu : ∀ {xs x t} -> ClosedWrt (x ∷ xs) t -> ClosedWrt xs (nu x t)
 
 
-pattern tipP = inj₁ tt
-
-tipG : ∀ {i} -> Graph i
-unν tipG = tipP
+Closed : LoopyTree -> Set
+Closed = ClosedWrt []
 
 
-pattern branchP l r = inj₂ (l , r)
-
-branchG : ∀ {i} -> Graph i -> Graph i -> Graph (↑ i)
-unν (branchG l r) = branchP l r
+Closed-absurd-var : ∀ {a} {A : Set a} {x} -> Closed (var x) -> A
+Closed-absurd-var (var ())
 
 
-data GraphMA : Set where
-  tip branch : GraphMA
+ClosedWrt-⊆ : ∀ {xs ys t} -> xs ⊆ ys -> ClosedWrt xs t -> ClosedWrt ys t
+ClosedWrt-⊆ _ tip = tip
+ClosedWrt-⊆ sub (branch l r) = branch (ClosedWrt-⊆ sub l) (ClosedWrt-⊆ sub r)
+ClosedWrt-⊆ sub (var elem) = var (sub elem)
+ClosedWrt-⊆ sub (nu cl) = nu (ClosedWrt-⊆ (∷-⊆ sub) cl)
 
 
-GraphMB : GraphMA -> Set
-GraphMB tip = ⊥
-GraphMB branch = ⊤ ⊎ ⊤
+Closed-subst : ∀ {xs x t s} -> ClosedWrt (x ∷ xs) t -> ClosedWrt xs s -> ClosedWrt xs (t [ x ⇒ s ])
+Closed-subst tip _ = tip
+Closed-subst (branch cl cl₁) s-closed = branch (Closed-subst cl s-closed) (Closed-subst cl₁ s-closed)
+Closed-subst {x = y} (var {x = x} elem) s-closed with x ≟ y | elem
+... | yes x≡y | _ rewrite x≡y = s-closed
+... | no x≢y | Any.here x≡y = ⊥-elim (x≢y x≡y)
+... | no x≢y | Any.there elem' = var elem'
+Closed-subst {x = y} (nu {xs} {x} {t} cl) s-closed with x ≟ y
+... | yes x≡y rewrite x≡y = nu (ClosedWrt-⊆ ⊆-duplicate cl)
+... | no x≢y = nu (Closed-subst (ClosedWrt-⊆ ⊆-swap cl) (ClosedWrt-⊆ there s-closed))
 
 
-GraphM : Size -> Set
-GraphM = M record { A = GraphMA ; B = GraphMB }
+nu-unfold-closed : ∀ {t} -> Closed t -> Closed (nu-unfold t)
+nu-unfold-closed tip = tip
+nu-unfold-closed cl@(branch _ _) = cl
+nu-unfold-closed cl@(var _) = cl
+nu-unfold-closed (nu cl) = Closed-subst cl (nu cl)
+
+
+-- Nu Prefix length
+
+
+nu-prefix-length : LoopyTree -> ℕ
+nu-prefix-length (nu x t) = 1 + nu-prefix-length t
+nu-prefix-length _ = 0
+
+
+subst-preserves-nu-prefix-length : ∀ t x s
+  -> Contractive t
+  -> False (var? t)
+  -> nu-prefix-length (t [ x ⇒ s ]) ≡ nu-prefix-length t
+subst-preserves-nu-prefix-length tip _ _ _ _ = refl
+subst-preserves-nu-prefix-length (branch _ _) _ _ _ _ = refl
+subst-preserves-nu-prefix-length (var _) _ _ _ ()
+subst-preserves-nu-prefix-length (nu x t) y s (nu t-novar t-contr) _ with x ≟ y
+... | yes eq = refl
+... | no _ rewrite subst-preserves-nu-prefix-length t y s t-contr t-novar = refl
+
+
+-- Wellformed LoopyTrees and operations
 
 
 record LoopyTreeWf : Set where
@@ -211,53 +202,6 @@ _<<<_ = _<′_ on nu-prefix-length ∘ LoopyTreeWf.tree
 <<<-wf = Inverse-image.well-founded _ <-well-founded
 
 
-Closed-absurd-var : ∀ {a} {A : Set a} {x} -> Closed (var x) -> A
-Closed-absurd-var {x = x} cl = ⊥-elim (cl x var)
-
-
-Closed-branch-inv : ∀ {l r} -> Closed (branch l r) -> Closed l × Closed r
-Closed-branch-inv cl = (λ x xfree -> cl x (branch (inj₁ xfree))) , (λ x xfree -> cl x (branch (inj₂ xfree)))
-
-
-branch-inv-wf : ∀ {l r} -> (Contractive (branch l r)) -> (Closed (branch l r)) -> LoopyTreeWf × LoopyTreeWf 
-branch-inv-wf {l} {r} (branch l-contr r-contr) closed
-    = let l-closed , r-closed = Closed-branch-inv closed
-      in mkLoopyTreeWf l l-contr l-closed , mkLoopyTreeWf r r-contr r-closed
-
-
-Free-subst-inv : ∀ x t y s
-  -> Free x (t [ y ⇒ s ])
-  -> Free x s ⊎ (x ≢ y × Free x t)
-
-Free-subst-inv _ tip _ _ ()
-
-Free-subst-inv x (branch l r) y s (branch (inj₁ hyp)) with Free-subst-inv x l y s hyp
-... | (inj₁ hyp') = inj₁ hyp'
-... | (inj₂ (hyp₁ , hyp₂)) = inj₂ (hyp₁ , branch (inj₁ hyp₂))
-Free-subst-inv x (branch l r) y s (branch (inj₂ hyp)) with Free-subst-inv x r y s hyp
-... | (inj₁ hyp') = inj₁ hyp'
-... | (inj₂ (hyp₁ , hyp₂)) = inj₂ (hyp₁ , branch (inj₂ hyp₂))
-
-Free-subst-inv x (var v) y s hyp with v ≟ y
-... | yes v≡y rewrite v≡y = inj₁ hyp
-Free-subst-inv x (var v) y s var | no v≢y = inj₂ (v≢y , var)
-
-Free-subst-inv x (nu v t) y s hyp with v ≟ y
-Free-subst-inv x (nu v t) y s (nu x≢y free) | yes v≡y rewrite v≡y = inj₂ (x≢y , nu x≢y free)
-Free-subst-inv x (nu v t) y s (nu x≢v free) | no v≢y with Free-subst-inv x t y s free
-... | inj₁ free' = inj₁ free'
-... | inj₂ (x≢y , free') = inj₂ (x≢y , nu x≢v free')
-
-
-nu-unfold-closed : ∀ {t} -> Closed t -> Closed (nu-unfold t)
-nu-unfold-closed {tip} cl = cl
-nu-unfold-closed {branch _ _} cl = cl
-nu-unfold-closed {var _} cl = cl
-nu-unfold-closed {nu x t} cl y free with Free-subst-inv y t x (nu x t) free
-... | inj₁ free' = cl y free'
-... | inj₂ (eq , free') = cl y (nu eq free')
-
-
 nu-unfold-wf : LoopyTreeWf -> LoopyTreeWf
 nu-unfold-wf = map-LoopyTreeWf nu-unfold nu-unfold-contractive nu-unfold-closed
 
@@ -268,3 +212,54 @@ nu-unfold-wf-<<< : ∀ x t contr closed
 nu-unfold-wf-<<< x t (nu novar contr) closed
     rewrite subst-preserves-nu-prefix-length t x (nu x t) contr novar
     = ≤′-refl
+
+
+-- Graphs via polynomial functors
+
+
+GraphF : Functor
+GraphF = (|K| ⊤) |+| (|Id| |×| |Id|)
+
+
+Graph : Size -> Set
+Graph i = ν GraphF i
+
+
+pattern tipP = inj₁ tt
+
+tipG : ∀ {i} -> Graph i
+unν tipG = tipP
+
+
+pattern branchP l r = inj₂ (l , r)
+
+branchG : ∀ {i} -> Graph i -> Graph i -> Graph (↑ i)
+unν (branchG l r) = branchP l r
+
+
+-- Graphs via M-types
+
+
+data GraphMA : Set where
+  tip branch : GraphMA
+
+
+GraphMB : GraphMA -> Set
+GraphMB tip = ⊥
+GraphMB branch = ⊤ ⊎ ⊤
+
+
+GraphM : Size -> Set
+GraphM = M record { A = GraphMA ; B = GraphMB }
+
+
+tipM : ∀ {s} -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM s)
+tipM = tip , λ()
+
+
+branchM : ∀ {s} -> GraphM s -> GraphM s -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM s)
+branchM l r
+    = branch ,
+      λ where
+        (inj₁ _) -> l
+        (inj₂ _) -> r

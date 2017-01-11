@@ -18,9 +18,8 @@ expand'F :
   -> ((s : LoopyTreeWf) -> s <<< t -> [ GraphF ] LoopyTreeWf)
   -> [ GraphF ] LoopyTreeWf
 expand'F (mkLoopyTreeWf tip _ _) _ = tipP
-expand'F (mkLoopyTreeWf (branch l r) contr closed) _
-    = let l' , r' = branch-inv-wf contr closed in
-      branchP l' r'
+expand'F (mkLoopyTreeWf (branch l r) (branch l-contr r-contr) (branch l-closed r-closed)) _
+    = branchP (mkLoopyTreeWf l l-contr l-closed) (mkLoopyTreeWf r r-contr r-closed)
 expand'F (mkLoopyTreeWf (var _) _ closed) _ = Closed-absurd-var closed
 expand'F t@(mkLoopyTreeWf (nu x s) contr closed) expand'
     = expand' (nu-unfold-wf t) (nu-unfold-wf-<<< x s contr closed)
