@@ -143,6 +143,13 @@ subst-preserves-Contractive {nu x t} {y} nu-x-t-contr@(nu t-novar t-contr) s-con
 ... | no neq = nu (subst-preserves-not-var t-novar) (subst-preserves-Contractive t-contr s-contr)
 
 
+nu-unfold-contractive : ∀ {t} -> Contractive t -> Contractive (nu-unfold t)
+nu-unfold-contractive c@tip = c
+nu-unfold-contractive c@(branch _ _) = c
+nu-unfold-contractive c@(var _) = c
+nu-unfold-contractive c@(nu _ c') = subst-preserves-Contractive c' c
+
+
 GraphF : Functor
 GraphF = (|K| ⊤) |+| (|Id| |×| |Id|)
 
@@ -176,12 +183,28 @@ GraphM : Size -> Set
 GraphM = M record { A = GraphMA ; B = GraphMB }
 
 
-expand-input : Set
-expand-input = Σ[ t ∈ LoopyTree ] (Contractive t × Closed t)
+record LoopyTreeWf : Set where
+  constructor mkLoopyTreeWf
+  field
+    tree : LoopyTree
+    contractive : Contractive tree
+    closed : Closed tree
 
 
-_<<<_ : Rel expand-input lzero
-_<<<_ = _<′_ on nu-prefix-length ∘ proj₁
+map-LoopyTreeWf
+  : (f : LoopyTree -> LoopyTree)
+  → (∀ {t} → Contractive t → Contractive (f t)) 
+  → (∀ {t} → Closed t → Closed (f t))
+  → LoopyTreeWf
+  → LoopyTreeWf
+map-LoopyTreeWf f f-contr f-closed t
+    = record { tree = f tree ; contractive = f-contr contractive ; closed = f-closed closed}
+  where
+    open LoopyTreeWf t
+
+
+_<<<_ : Rel LoopyTreeWf lzero
+_<<<_ = _<′_ on nu-prefix-length ∘ LoopyTreeWf.tree
 
 
 <<<-wf : Well-founded _<<<_
@@ -192,8 +215,14 @@ Closed-absurd-var : ∀ {a} {A : Set a} {x} -> Closed (var x) -> A
 Closed-absurd-var {x = x} cl = ⊥-elim (cl x var)
 
 
-Closed-branch-inv : ∀ l r -> Closed (branch l r) -> Closed l × Closed r
-Closed-branch-inv l r cl = (λ x xfree -> cl x (branch (inj₁ xfree))) , (λ x xfree -> cl x (branch (inj₂ xfree)))
+Closed-branch-inv : ∀ {l r} -> Closed (branch l r) -> Closed l × Closed r
+Closed-branch-inv cl = (λ x xfree -> cl x (branch (inj₁ xfree))) , (λ x xfree -> cl x (branch (inj₂ xfree)))
+
+
+branch-inv-wf : ∀ {l r} -> (Contractive (branch l r)) -> (Closed (branch l r)) -> LoopyTreeWf × LoopyTreeWf 
+branch-inv-wf {l} {r} (branch l-contr r-contr) closed
+    = let l-closed , r-closed = Closed-branch-inv closed
+      in mkLoopyTreeWf l l-contr l-closed , mkLoopyTreeWf r r-contr r-closed
 
 
 Free-subst-inv : ∀ x t y s
@@ -220,19 +249,22 @@ Free-subst-inv x (nu v t) y s (nu x≢v free) | no v≢y with Free-subst-inv x t
 ... | inj₂ (x≢y , free') = inj₂ (x≢y , nu x≢v free')
 
 
-Closed-nu : ∀ {t x} -> Closed (nu x t) -> Closed (t [ x ⇒ nu x t ])
-Closed-nu {t} {x} cl y free with Free-subst-inv y t x (nu x t) free
+nu-unfold-closed : ∀ {t} -> Closed t -> Closed (nu-unfold t)
+nu-unfold-closed {tip} cl = cl
+nu-unfold-closed {branch _ _} cl = cl
+nu-unfold-closed {var _} cl = cl
+nu-unfold-closed {nu x t} cl y free with Free-subst-inv y t x (nu x t) free
 ... | inj₁ free' = cl y free'
 ... | inj₂ (eq , free') = cl y (nu eq free')
 
 
-nu-unfold' : expand-input -> expand-input
-nu-unfold' (nu x t , nu-x-t-contr@(nu t-novar t-contr) , closed)
-    = nu-unfold (nu x t) , subst-preserves-Contractive t-contr nu-x-t-contr , Closed-nu closed
-nu-unfold' (t , contr , closed) = (t , contr , closed)
+nu-unfold-wf : LoopyTreeWf -> LoopyTreeWf
+nu-unfold-wf = map-LoopyTreeWf nu-unfold nu-unfold-contractive nu-unfold-closed
 
 
-nu-unfold'-<<< : ∀ x t contr closed -> nu-unfold' (nu x t , contr , closed) <<< (nu x t , contr , closed)
-nu-unfold'-<<< x t (nu t-novar t-contr) closed
-  rewrite subst-preserves-nu-prefix-length t x (nu x t) t-contr t-novar
-  = ≤′-refl
+nu-unfold-wf-<<< : ∀ x t contr closed
+  -> let t' = (mkLoopyTreeWf (nu x t) contr closed)
+     in nu-unfold-wf t' <<< t'
+nu-unfold-wf-<<< x t (nu novar contr) closed
+    rewrite subst-preserves-nu-prefix-length t x (nu x t) contr novar
+    = ≤′-refl

@@ -14,20 +14,21 @@ open import Functor
 
 
 expand'F :
-  ∀ (t : expand-input)
-  -> ((s : expand-input) -> s <<< t -> [ GraphF ] expand-input)
-  -> [ GraphF ] expand-input
-expand'F (tip , _) _ = tipP
-expand'F (branch l r , branch contr-l contr-r , closed) _
-    = let closed-l , closed-r = Closed-branch-inv _ _ closed
-      in branchP (l , contr-l , closed-l) (r , contr-r , closed-r)
-expand'F (var _ , _ , closed) _ = ⊥-elim (Closed-absurd-var closed)
-expand'F t@(nu x s , contr , closed) expand' = expand' (nu-unfold' t) (nu-unfold'-<<< x s contr closed)
+  ∀ (t : LoopyTreeWf)
+  -> ((s : LoopyTreeWf) -> s <<< t -> [ GraphF ] LoopyTreeWf)
+  -> [ GraphF ] LoopyTreeWf
+expand'F (mkLoopyTreeWf tip _ _) _ = tipP
+expand'F (mkLoopyTreeWf (branch l r) contr closed) _
+    = let l' , r' = branch-inv-wf contr closed in
+      branchP l' r'
+expand'F (mkLoopyTreeWf (var _) _ closed) _ = Closed-absurd-var closed
+expand'F t@(mkLoopyTreeWf (nu x s) contr closed) expand'
+    = expand' (nu-unfold-wf t) (nu-unfold-wf-<<< x s contr closed)
 
 
-expand' : expand-input -> [ GraphF ] expand-input
+expand' : LoopyTreeWf -> [ GraphF ] LoopyTreeWf
 expand' = All.wfRec <<<-wf lzero (λ _ ->  _) expand'F
 
 
-expand : ∀ {i} -> expand-input -> Graph i
+expand : ∀ {i} -> LoopyTreeWf -> Graph i
 unν (expand t) = fmap GraphF expand (expand' t)

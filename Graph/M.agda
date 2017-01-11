@@ -10,21 +10,21 @@ open import M
 
 expandF
   : ∀ {t}
-  -> (x : expand-input)
-  -> (expand-input -> GraphM t)
-  -> ((y : expand-input) -> y <<< x -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM t))
+  -> (x : LoopyTreeWf)
+  -> (LoopyTreeWf -> GraphM t)
+  -> ((y : LoopyTreeWf) -> y <<< x -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM t))
   -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM t)
-expandF (tip , t-contr , t-closed) expand₁ expand₂ = tip , λ()
-expandF (branch l r , branch l-contr r-contr , t-closed) expand₁ expand₂
-    = let l-closed , r-closed = Closed-branch-inv l r t-closed in
+expandF (mkLoopyTreeWf tip _ _) _ _ = tip , λ()
+expandF (mkLoopyTreeWf (branch l r) contr closed) expand₁ _
+    = let l' , r' = branch-inv-wf contr closed in
       branch ,
       λ where
-        (inj₁ _) -> expand₁ (l , l-contr , l-closed)
-        (inj₂ _) -> expand₁ (r , r-contr , r-closed)
-expandF (var x , t-contr , t-closed) expand₁ expand₂ = Closed-absurd-var t-closed
-expandF t@(nu x t₁ , t-contr , t-closed) expand₁ expand₂
-    = expand₂ (nu-unfold' t) (nu-unfold'-<<< x t₁ t-contr t-closed)
+        (inj₁ _) -> expand₁ l'
+        (inj₂ _) -> expand₁ r'
+expandF (mkLoopyTreeWf (var _) _ closed) _ _ = Closed-absurd-var closed
+expandF t@(mkLoopyTreeWf (nu x t₁) contr closed) _ expand₂
+    = expand₂ (nu-unfold-wf t) (nu-unfold-wf-<<< x t₁ contr closed)
 
 
-expand : ∀ {s} -> expand-input -> GraphM s
+expand : ∀ {s} -> LoopyTreeWf -> GraphM s
 expand = fixM <<<-wf expandF

@@ -10,18 +10,18 @@ open import Functor
 
 
 expandF : ∀ {i}
-  -> (t : expand-input)
-  -> (expand-input -> Graph i)
-  -> ((s : expand-input) -> s <<< t -> [ GraphF ] (Graph i))
+  -> (t : LoopyTreeWf)
+  -> (LoopyTreeWf -> Graph i)
+  -> ((s : LoopyTreeWf) -> s <<< t -> [ GraphF ] (Graph i))
   -> [ GraphF ] (Graph i)
-expandF (tip , p) expand₁ expand₂ = tipP
-expandF (branch l r , (branch contr-l contr-r , closed)) expand₁ expand₂
-    = let closed-l , closed-r = Closed-branch-inv l r closed in
-      branchP (expand₁ (l , contr-l , closed-l)) (expand₁ (r , contr-r , closed-r))
-expandF (var x , (_ , closed)) expand₁ expand₂ = Closed-absurd-var closed
-expandF t@(nu x s , contr , closed) expand₁ expand₂
-    = expand₂ (nu-unfold' t) (nu-unfold'-<<< x s contr closed)
+expandF (mkLoopyTreeWf tip _ _) _ _ = tipP
+expandF (mkLoopyTreeWf (branch l r) contr closed) expand₁ _
+    = let l' , r' = branch-inv-wf contr closed in
+      branchP (expand₁ l') (expand₁ r')
+expandF (mkLoopyTreeWf (var _) _ closed) _ _ = Closed-absurd-var closed
+expandF t@(mkLoopyTreeWf (nu x s) contr closed) _ expand₂
+    = expand₂ (nu-unfold-wf t) (nu-unfold-wf-<<< x s contr closed)
 
 
-expand : ∀ {i} (t : expand-input) -> Graph i
+expand : ∀ {i} (t : LoopyTreeWf) -> Graph i
 expand = fixν <<<-wf expandF
