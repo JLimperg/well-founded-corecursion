@@ -5,15 +5,17 @@ open import Data.Product
 open import Data.Sum
 
 open import Graph.Base
-open import M
+import M
+
+open M.NonIndexed
 
 
 expandF
   : ∀ {t}
   -> (x : LoopyTreeWf)
   -> (LoopyTreeWf -> GraphM t)
-  -> ((y : LoopyTreeWf) -> y <<< x -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM t))
-  -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM t)
+  -> ((y : LoopyTreeWf) -> y <<< x -> ⟦ GraphMF ⟧ (GraphM t))
+  -> ⟦ GraphMF ⟧ (GraphM t)
 expandF (mkLoopyTreeWf tip _ _) _ _ = tipM
 expandF (mkLoopyTreeWf (branch l r) (branch l-contr r-contr) (branch l-closed r-closed)) expand₁ _
     = branchM (expand₁ (mkLoopyTreeWf l l-contr l-closed)) (expand₁ (mkLoopyTreeWf r r-contr r-closed))

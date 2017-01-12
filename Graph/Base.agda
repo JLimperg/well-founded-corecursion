@@ -21,7 +21,7 @@ open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
 open import Size
 
 open import Functor
-open import M
+import M
 
 
 open Data.List.Any.Membership-≡
@@ -240,24 +240,31 @@ unν (branchG l r) = branchP l r
 -- Graphs via M-types
 
 
-data GraphMA : Set where
-  tip branch : GraphMA
+GraphMF : M.NonIndexed.Container _
+GraphMF = Shape M.NonIndexed.▷ Position
+  module _ where
+    data Shape : Set where
+      tip branch : Shape
+
+    open Shape public
+
+    Position : Shape -> Set
+    Position tip = ⊥
+    Position branch = ⊤ ⊎ ⊤
 
 
-GraphMB : GraphMA -> Set
-GraphMB tip = ⊥
-GraphMB branch = ⊤ ⊎ ⊤
+open M.NonIndexed
 
 
 GraphM : Size -> Set
-GraphM = M record { A = GraphMA ; B = GraphMB }
+GraphM = M GraphMF
 
 
-tipM : ∀ {s} -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM s)
+tipM : ∀ {s} -> ⟦ GraphMF ⟧ (GraphM s)
 tipM = tip , λ()
 
 
-branchM : ∀ {s} -> GraphM s -> GraphM s -> Σ[ a ∈ GraphMA ] (GraphMB a -> GraphM s)
+branchM : ∀ {s} -> GraphM s -> GraphM s -> ⟦ GraphMF ⟧ (GraphM s)
 branchM l r
     = branch ,
       λ where

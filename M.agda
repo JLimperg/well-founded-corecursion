@@ -1,92 +1,91 @@
 module M where
 
 
+import Data.Container as NI
+import Data.Container.Indexed as I
 open import Data.Empty
-open import Data.Product hiding (map)
-open import Data.Sum hiding (map)
+open import Data.Product
+open import Data.Sum
 open import Data.Unit
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded
-open import Level renaming (zero to lzero ; suc to lsuc)
+open import Level
 open import Relation.Binary
-open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
-open import Relation.Binary.HeterogeneousEquality as Het using (_≅_ ; ≅-to-≡)
 open import Size
 
+module Indexed where
 
-record Container la lb : Set (lsuc (la ⊔ lb)) where
-  field
-    A : Set la
-    B : A -> Set lb
-
-open Container
+  open I public using
+    (Container ; _◃_/_ ; Command ; Response ; next ; ⟦_⟧)
 
 
-record ContainerI li la lb : Set (lsuc (li ⊔ la ⊔ lb)) where
-  field
-    I : Set li
-    A : I -> Set la
-    B : ∀ {i} -> A i -> Set lb
-    r : ∀ {i} -> {a : A i} -> B a -> I
+  record M
+    {lo lc lr}
+    {O : Set lo}
+    (C : Container O O lc lr)
+    (s : Size)
+    (o : O)
+    : Set (lo ⊔ lc ⊔ lr) where
+    coinductive
+    field
+      inf : ∀ {t : Size< s} -> ⟦ C ⟧ (M C t) o
 
-open ContainerI
-
-
-Container⇒ContainerI : ∀ {la lb} -> Container la lb -> ContainerI lzero la lb
-Container⇒ContainerI record { A = A ; B = B } = record { I = ⊤ ; A = λ _ -> A ; B = B ; r = λ _ -> tt }
-
-
-record MI
-  {li la lb}
-  (c : ContainerI li la lb)
-  (i : I c)
-  (s : Size)
-  : Set (la ⊔ lb) where
-  coinductive
-  field
-    -- TODO Shouldn't we make a available without t < s?
-    inf : ∀ {t : Size< s}
-      -> Σ[ a ∈ A c i ] ((b : B c a) -> MI c (r c b) t)
-
-open MI public
+  open M public
 
 
-module _ {li la lb} {c : ContainerI li la lb} where
+  module _ {lo lc lr} {O : Set lo} {C : Container O O lc lr} where
 
-  head : ∀ {s} {t : Size< s} {i} -> MI c i s -> A c i
-  head x = proj₁ (inf x)
-
-
-  tail : ∀ {s} {t : Size< s} {i}
-    -> (x : MI c i s)
-    -> (b : B c (head x))
-    -> MI c (r c b) t
-  tail x = proj₂ (inf x)
+    head : ∀ {s} {t : Size< s} {o} -> M C s o -> Command C o
+    head x = proj₁ (inf x)
 
 
-M : ∀ {la lb} (c : Container la lb) (s : Size) -> Set (la ⊔ lb)
-M c s = MI (Container⇒ContainerI c) tt s
+    tail : ∀ {s} {t : Size< s} {o}
+      -> (m : M C s o)
+      -> (r : Response C (head m))
+      -> M C t (next C (head m) r)
+    tail x = proj₂ (inf x)
 
 
--- TODO What is the correct level for _<_?
-fixM' : ∀ {s li la lb lc} {c : ContainerI li la lb} {i : I c} {C : Set lc} {_<_ : Rel C lc} (<-wf : Well-founded _<_)
-  -> (∀ {t}
-      -> (x : C)
-      -> (C -> MI c i t)
-      -> ((y : C) -> y < x -> Σ[ a ∈ A c i ] ((b : B c a) -> MI c (r c b) t))
-      -> Σ[ a ∈ A c i ] ((b : B c a) -> MI c (r c b) t))
-  -> (x : C)
-  -> Acc _<_ x
-  -> MI c i s
-inf (fixM' <-wf F x (acc rs)) = F x (λ y -> fixM' <-wf F y (<-wf y)) (λ y y<x -> inf (fixM' <-wf F y (rs y y<x)))
+    module _
+      {lin l<} {In : Set lin} {o : O} {_<_ : Rel In l<} (<-wf : Well-founded _<_)
+      (F : ∀ {t}
+        -> (x : In)
+        -> (In -> M C t o)
+        -> ((y : In) -> y < x -> ⟦ C ⟧ (M C t) o)
+        -> ⟦ C ⟧ (M C t) o)
+      where
+
+      fixM' : ∀ {s} -> (x : In) -> Acc _<_ x -> M C s o
+      fixM' x (acc rs) .inf = F x (λ y -> fixM' y (<-wf y)) (λ y y<x -> inf (fixM' y (rs y y<x)))
 
 
-fixM : ∀ {s li la lb lc} {c : ContainerI li la lb} {i : I c} {C : Set lc} {_<_ : Rel C lc} (<-wf : Well-founded _<_)
-  -> (∀ {t}
-      -> (x : C)
-      -> (C -> MI c i t)
-      -> ((y : C) -> y < x -> Σ[ a ∈ A c i ] ((b : B c a) -> MI c (r c b) t))
-      -> Σ[ a ∈ A c i ] ((b : B c a) -> MI c (r c b) t))
-  -> C
-  -> MI c i s
-fixM <-wf F x = fixM' <-wf F x (<-wf x) 
+      fixM : In -> M C ∞ o
+      fixM x = fixM' x (<-wf x)
+
+
+module NonIndexed where
+
+  open NI public using
+    (Container ; _▷_ ; Shape ; Position ; ⟦_⟧)
+
+
+  container⇒indexedContainer : ∀ {l} -> Container l -> I.Container ⊤ ⊤ _ _
+  container⇒indexedContainer (Shape ▷ Position) = (λ _ -> Shape) I.◃ (λ {_} -> Position) / (λ _ _ -> tt)
+
+
+  M : ∀ {l} -> Container l -> Size -> Set _
+  M C s = Indexed.M (container⇒indexedContainer C) s tt
+
+
+  fixM : ∀ {l lin l<} {C : Container l} {In : Set lin} {_<_ : Rel In l<} (<-wf : Well-founded _<_)
+    -> (∀ {t}
+        -> (x : In)
+        -> (In -> M C t)
+        -> ((y : In) -> y < x -> ⟦ C ⟧ (M C t))
+        -> ⟦ C ⟧ (M C t))
+    -> In
+    -> M C ∞
+  fixM <-wf F x = Indexed.fixM <-wf F x
+
+
+open Indexed public
