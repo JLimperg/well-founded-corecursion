@@ -20,7 +20,6 @@ open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
 open import Size
 
-open import Functor
 import M
 
 
@@ -214,29 +213,6 @@ nu-unfold-wf-<<< x t (nu novar contr) closed
     = ≤′-refl
 
 
--- Graphs via polynomial functors
-
-
-GraphF : Functor
-GraphF = (|K| ⊤) |+| (|Id| |×| |Id|)
-
-
-Graph : Size -> Set
-Graph i = ν GraphF i
-
-
-pattern tipP = inj₁ tt
-
-tipG : ∀ {i} -> Graph i
-unν tipG = tipP
-
-
-pattern branchP l r = inj₂ (l , r)
-
-branchG : ∀ {i} -> Graph i -> Graph i -> Graph (↑ i)
-unν (branchG l r) = branchP l r
-
-
 -- Graphs via M-types
 
 
@@ -260,11 +236,11 @@ GraphM : Size -> Set
 GraphM = M GraphMF
 
 
-tipM : ∀ {s} -> ⟦ GraphMF ⟧ (GraphM s)
+tipM : ∀ {A} -> ⟦ GraphMF ⟧ A
 tipM = tip , λ()
 
 
-branchM : ∀ {s} -> GraphM s -> GraphM s -> ⟦ GraphMF ⟧ (GraphM s)
+branchM : ∀ {A} -> A -> A -> ⟦ GraphMF ⟧ A
 branchM l r
     = branch ,
       λ where
