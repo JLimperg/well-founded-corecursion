@@ -213,6 +213,25 @@ nu-unfold-wf-<<< x t (nu novar contr) closed
     = ≤′-refl
 
 
+-- Graphs directly
+
+
+data GraphF (A : Set) : Set where
+  tip : GraphF A
+  branch : A -> A -> GraphF A
+
+
+record Graph (s : Size) : Set where
+  coinductive
+  field
+    force : ∀ {t : Size< s} -> GraphF (Graph t)
+
+
+fmap-GraphF : ∀ {A B} -> (A -> B) -> GraphF A -> GraphF B
+fmap-GraphF f tip = tip
+fmap-GraphF f (branch l r) = branch (f l) (f r)
+
+
 -- Graphs via M-types
 
 
@@ -221,8 +240,6 @@ GraphMF = Shape M.NonIndexed.▷ Position
   module _ where
     data Shape : Set where
       tip branch : Shape
-
-    open Shape public
 
     Position : Shape -> Set
     Position tip = ⊥

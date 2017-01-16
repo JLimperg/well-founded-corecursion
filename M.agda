@@ -68,6 +68,8 @@ module NonIndexed where
   open NI public using
     (Container ; _▷_ ; Shape ; Position ; ⟦_⟧)
 
+  open Indexed.M public
+
 
   container⇒indexedContainer : ∀ {l} -> Container l -> I.Container ⊤ ⊤ _ _
   container⇒indexedContainer (Shape ▷ Position) = (λ _ -> Shape) I.◃ (λ {_} -> Position) / (λ _ _ -> tt)
