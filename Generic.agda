@@ -28,42 +28,81 @@ private
   argH = arg (arg-info hidden relevant)
 
 
-fixG
-  : Name {- single record field -}
-  → Name {- function name -}
+  lam' : String → Term → Term
+  lam' s t = lam visible (abs s t)
+
+
+  piH : String → Term → Term
+  piH s t = pi (argH unknown) (abs s t)
+
+
+fixGtype : ∀ {li lc}
+  → (la l< : Level) → (Size → Set li) → (Size → Set lc) → Set _
+fixGtype la l< Ind Coind
+    = ∀ {A : Set la} {_<_ : Rel A l<}
+      → (<-wf : Well-founded _<_)
+      → (F : ∀ {t}
+          → (x : A)
+          → (A → Coind t)
+          → (∀ y → y < x → Ind t)
+          → Ind t)
+      → ∀ {s}
+      → (x : A)
+      → Acc _<_ x
+      → Coind s
+
+
+fixG : ∀ {li lc}
+  → (Size → Set li) {- inductive type -}
+  → (Size → Set lc) {- coinductive record -}
+  → Name            {- single record field -}
+  → Name            {- function name -}
   → TC ⊤
-fixG force fix
-    = defineFun fix
-      [ clause
-          ( arg' (var "<-wf") {- 0 -}
-          ∷ arg' (var "F") {- 1 -}
-          ∷ arg' (var "x") {- 2 -}
-          ∷ arg' (con (quote acc) [ arg' (var "rs") ]) {- 3 -}
-          ∷ arg' (proj force)
-          ∷ [])
-          (var 2
-            ( arg' (var 1 [])
-            ∷ arg' (lam visible (abs "y"
-                (def fix
-                  ( arg' (var 4 [])
-                  ∷ arg' (var 3 [])
-                  ∷ arg' (var 0 [])
-                  ∷ arg' (var 4 [ arg' (var 0 []) ])
-                  ∷ []))))
-            ∷ arg' ((lam visible (abs "y" (lam visible (abs "y<x"
-                (def force
-                  [ arg' (def fix
-                      ( arg' (var 5 [])
-                      ∷ arg' (var 4 [])
-                      ∷ arg' (var 1 [])
-                      ∷ arg' (var 2
-                          ( arg' (var 1 [])
-                          ∷ arg' (var 0 [])
-                          ∷ []))
-                      ∷ []))
-                  ]))))))
-            ∷ []))
-      ]
+fixG Ind Coind force fix
+    = quoteTC Ind >>= λ Ind →
+      quoteTC Coind >>= λ Coind →
+      declareDef (arg' fix) (type Ind Coind) >>
+      defineFun fix
+        [ clause
+            ( arg' (var "<-wf")
+            ∷ arg' (var "F")
+            ∷ arg' (var "x")
+            ∷ arg' (con (quote acc) [ arg' (var "rs") ])
+            ∷ arg' (proj force)
+            ∷ [])
+            (var 2
+              ( arg' (var 1 [])
+              ∷ arg' (lam' "y"
+                  (def fix
+                    ( arg' (var 4 [])                  {- <-wf -}
+                    ∷ arg' (var 3 [])                  {- F -}
+                    ∷ arg' (var 0 [])                  {- y -}
+                    ∷ arg' (var 4 [ arg' (var 0 []) ]) {- <-wf y -}
+                    ∷ [])))
+              ∷ arg' ((lam' "y" (lam' "y<x"
+                  (def force
+                    [ arg' (def fix
+                        ( arg' (var 5 [])     {- <-wf -}
+                        ∷ arg' (var 4 [])     {- F -}
+                        ∷ arg' (var 1 [])     {- y -}
+                        ∷ arg' (var 2         {- rs -}
+                            ( arg' (var 1 []) {- y -}
+                            ∷ arg' (var 0 []) {- y<x -}
+                            ∷ []))
+                        ∷ []))
+                    ]))))
+              ∷ []))
+        ]
+  where
+    type : Term → Term → Type
+    type Ind Coind
+        = piH "la" (piH  "l<"
+            (def (quote fixGtype)
+              ( arg' (var 1 [])
+              ∷ arg' (var 0 [])
+              ∷ arg' Ind
+              ∷ arg' Coind
+              ∷ [])))
 
 
 data Graph : Size → Set
@@ -83,16 +122,53 @@ record Graph∞ (s : Size) where
 open Graph∞
 
 
-fixGraph' : ∀ {lin l<} {In : Set lin} {_<_ : Rel In l<}
-  → (<-wf : Well-founded _<_)
-  → (F : ∀ {t}
-      → (x : In)
-      → (In → Graph∞ t)
-      → ((y : In) → y < x → Graph t)
-      → Graph t)
+unquoteDecl fixGraph = fixG Graph Graph∞ (quote force) fixGraph
+
+{-
+fixGraph : ∀ {la l<} → fixGtype la l< Graph Graph∞
+
+fixGraph : ∀ {la l<} {A : Set la} {_<_ : Rel A l<}
+  → Well-founded _<_
+  → (∀ {t}
+     → (x : A)
+     → (A → Graph∞ t)
+     → (∀ y → y < x → Graph t)
+     → Graph t)
   → ∀ {s}
-  → (x : In)
+  → (x : A)
   → Acc _<_ x
   → Graph∞ s
+-}
 
-unquoteDef fixGraph' = fixG (quote force) fixGraph'
+
+data GraphF (Graph : Set) : Set where
+  tip : GraphF Graph
+  branch : Graph → Graph → GraphF Graph
+
+
+record Graph′ (s : Size) : Set where
+  coinductive
+  field
+    force′ : ∀ {t : Size< s} → GraphF (Graph′ t)
+
+open Graph′
+
+
+unquoteDecl fixGraph′
+    = fixG (λ s → GraphF (Graph′ s)) Graph′ (quote force′) fixGraph′
+
+{-
+fixGraph′ : ∀ {la l<} → fixGtype la l< (λ s → GraphF (Graph′ s)) Graph′
+
+fixGraph′ : ∀ {la l<} {A : Set la} {_<_ : Rel A l<}
+  → Well-founded _<_
+  → (∀ {t}
+     → (x : A)
+     → (A → Graph′ t)
+     → (∀ y → y < x → GraphF (Graph′ t))
+     → GraphF (Graph′ t))
+  → ∀ {s}
+  → (x : A)
+  → Acc _<_ x
+  → Graph′ s
+-}
