@@ -34,7 +34,7 @@ module _
   where
 
 
-  fixGraph' : ∀ {s} -> (x : In) → Acc _<_ x → Graph∞ s
+  fixGraph' : ∀ {s} → (x : In) → Acc _<_ x → Graph∞ s
   fixGraph' x (acc rs) .force
       = F x
           (λ y → fixGraph' y (<-wf y))

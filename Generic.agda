@@ -1,15 +1,15 @@
 module Generic where
 
 
-open import Category.Monad
+open import Category.Monad using (RawMonad)
 open import Data.List
-open import Data.String
+open import Data.String using (String)
 open import Data.Unit
-open import Induction.WellFounded
-open import Level
+open import Induction.WellFounded using (Well-founded ; Acc ; acc)
+open import Level using (Level)
 open import Reflection
-open import Relation.Binary
-open import Size
+open import Relation.Binary using (Rel)
+open import Size using (Size ; Size<_)
 
 
 private

@@ -1,18 +1,19 @@
 module M where
 
 
-import Data.Container as NI
-import Data.Container.Indexed as I
 open import Data.Empty
 open import Data.Product
 open import Data.Sum
 open import Data.Unit
 open import Induction.Nat using (<-well-founded)
-open import Induction.WellFounded
-open import Level
-open import Relation.Binary
-open import Relation.Binary.PropositionalEquality
-open import Size
+open import Induction.WellFounded using (Well-founded ; Acc ; acc)
+open import Level using (_⊔_)
+open import Relation.Binary using (Rel)
+open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
+open import Size using (Size ; Size<_ ; ∞)
+
+import Data.Container as NI
+import Data.Container.Indexed as I
 
 module Indexed where
 
@@ -29,38 +30,40 @@ module Indexed where
     : Set (lo ⊔ lc ⊔ lr) where
     coinductive
     field
-      inf : ∀ {t : Size< s} -> ⟦ C ⟧ (M C t) o
+      inf : ∀ {t : Size< s} → ⟦ C ⟧ (M C t) o
 
   open M public
 
 
   module _ {lo lc lr} {O : Set lo} {C : Container O O lc lr} where
 
-    head : ∀ {s} {t : Size< s} {o} -> M C s o -> Command C o
+    head : ∀ {s} {t : Size< s} {o} → M C s o → Command C o
     head x = proj₁ (inf x)
 
 
     tail : ∀ {s} {t : Size< s} {o}
-      -> (m : M C s o)
-      -> (r : Response C (head m))
-      -> M C t (next C (head m) r)
+      → (m : M C s o)
+      → (r : Response C (head m))
+      → M C t (next C (head m) r)
     tail x = proj₂ (inf x)
 
 
     module _
-      {lin l<} {In : Set lin} {o : O} {_<_ : Rel In l<} (<-wf : Well-founded _<_)
+      {lin l<} {In : Set lin} {o : O}
+      {_<_ : Rel In l<} (<-wf : Well-founded _<_)
       (F : ∀ {t}
-        -> (x : In)
-        -> (In -> M C t o)
-        -> ((y : In) -> y < x -> ⟦ C ⟧ (M C t) o)
-        -> ⟦ C ⟧ (M C t) o)
+         → (x : In)
+         → (In → M C t o)
+         → ((y : In) → y < x → ⟦ C ⟧ (M C t) o)
+         → ⟦ C ⟧ (M C t) o)
       where
 
-      fixM' : ∀ {s} -> (x : In) -> Acc _<_ x -> M C s o
-      fixM' x (acc rs) .inf = F x (λ y -> fixM' y (<-wf y)) (λ y y<x -> inf (fixM' y (rs y y<x)))
+      fixM' : ∀ {s} → (x : In) → Acc _<_ x → M C s o
+      fixM' x (acc rs) .inf
+          = F x (λ y → fixM' y (<-wf y)) (λ y y<x → inf (fixM' y (rs y y<x)))
 
 
-      fixM : In -> M C ∞ o
+      fixM : In → M C ∞ o
       fixM x = fixM' x (<-wf x)
 
 
@@ -118,11 +121,12 @@ module NonIndexed where
   open Indexed public using (funext-to-F-ext)
 
 
-  container⇒indexedContainer : ∀ {l} -> Container l -> I.Container ⊤ ⊤ _ _
-  container⇒indexedContainer (Shape ▷ Position) = (λ _ -> Shape) I.◃ (λ {_} -> Position) / (λ _ _ -> tt)
+  container⇒indexedContainer : ∀ {l} → Container l → I.Container ⊤ ⊤ _ _
+  container⇒indexedContainer (Shape ▷ Position)
+      = (λ _ → Shape) I.◃ (λ {_} → Position) / (λ _ _ → tt)
 
 
-  M : ∀ {l} -> Container l -> Size -> Set _
+  M : ∀ {l} → Container l → Size → Set _
   M C s = Indexed.M (container⇒indexedContainer C) s tt
 
 
