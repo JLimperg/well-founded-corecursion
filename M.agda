@@ -9,7 +9,8 @@ open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; Acc ; acc)
 open import Level using (_⊔_)
 open import Relation.Binary using (Rel)
-open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
+open import Relation.Binary.PropositionalEquality using
+  (_≡_ ; refl ; Extensionality)
 open import Size using (Size ; Size<_ ; ∞)
 
 import Data.Container as NI
@@ -69,9 +70,9 @@ module Indexed where
 
       module _
         (F-ext : ∀ x {f f' g g'}
-            → (∀ y → f y ≡ f' y)
-            → (∀ y y<x → g y y<x ≡ g' y y<x)
-            → F x f g ≡ F x f' g')
+           → (∀ y → f y ≡ f' y)
+           → (∀ y y<x → g y y<x ≡ g' y y<x)
+           → F x f g ≡ F x f' g')
         where
 
         fixM'-Acc-irrelevant : ∀ {x} (acc acc' : Acc _<_ x)
@@ -92,24 +93,29 @@ module Indexed where
                 (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (<-wf y))
 
 
-      funext-to-F-ext
-        : (∀ {a b} {A : Set a} {B : A → Set b} {f g : (x : A) → B x}
-           → (∀ x → f x ≡ g x)
-           → f ≡ g)
-        → (∀ x {f f' g g'}
-           → (∀ y → f y ≡ f' y)
-           → (∀ y y<x → g y y<x ≡ g' y y<x)
-           → F x f g ≡ F x f' g')
-      funext-to-F-ext funext x {f} {f'} {g} {g'} eq-f eq-g = lem
-        where
-          f≡f' : f ≡ f'
-          f≡f' = funext eq-f
+  funext⇒F-ext
+    : (∀ {a b} → Extensionality a b)
+    → ∀ {a b c d e g h} {A : Set a} {B : A → Set b} {C : ∀ a → B a → Set c}
+        {D : A → Set d} {E : ∀ a → D a → Set e}
+        {G : ∀ a (d : D a) → E a d → Set g} {H : Set h}
+        (F : ∀ a
+           → ((b : B a) → C a b)
+           → ((d : D a) → (e : E a d) → G a d e)
+           → H)
+        x {f f' g g'}
+    → (∀ y → f y ≡ f' y)
+    → (∀ y z → g y z ≡ g' y z)
+    → F x f g ≡ F x f' g'
+  funext⇒F-ext funext F x {f} {f'} {g} {g'} eq-f eq-g = lem
+    where
+      f≡f' : f ≡ f'
+      f≡f' = funext eq-f
 
-          g≡g' : g ≡ g'
-          g≡g' = funext (λ y → funext (eq-g y))
+      g≡g' : g ≡ g'
+      g≡g' = funext (λ y → funext (eq-g y))
 
-          lem : F x f g ≡ F x f' g'
-          lem rewrite f≡f' | g≡g' = refl
+      lem : F x f g ≡ F x f' g'
+      lem rewrite f≡f' | g≡g' = refl
 
 
 module NonIndexed where
@@ -118,7 +124,7 @@ module NonIndexed where
     (Container ; _▷_ ; Shape ; Position ; ⟦_⟧)
 
   open Indexed.M public
-  open Indexed public using (funext-to-F-ext)
+  open Indexed public using (funext⇒F-ext)
 
 
   container⇒indexedContainer : ∀ {l} → Container l → I.Container ⊤ ⊤ _ _
@@ -145,10 +151,10 @@ module NonIndexed where
 
 
     fixM-unfold
-      : (F-ext : ∀ x {f f' g g'}
-            → (∀ y → f y ≡ f' y)
-            → (∀ y y<x → g y y<x ≡ g' y y<x)
-            → F x f g ≡ F x f' g')
+      : (∀ x {f f' g g'}
+         → (∀ y → f y ≡ f' y)
+         → (∀ y y<x → g y y<x ≡ g' y y<x)
+         → F x f g ≡ F x f' g')
       → ∀ x
       → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
     fixM-unfold = Indexed.fixM-unfold <-wf F
