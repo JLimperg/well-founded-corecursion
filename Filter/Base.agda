@@ -8,9 +8,7 @@ open import Relation.Binary.PropositionalEquality
   using (_≡_ ; _≢_)
 open import Size using (Size ; ↑_)
 
-import M
-
-open M.NonIndexed
+open import M
 
 
 StreamC : ∀ {a} → Set a → Container a

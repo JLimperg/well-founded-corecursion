@@ -12,10 +12,7 @@ open import Relation.Binary.PropositionalEquality using
 open import Size using (∞)
 
 open import Filter.Base
-
-import M
-
-open M.NonIndexed
+open import M
 
 
 module _ {a} {A : Set a} where

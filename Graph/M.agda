@@ -1,14 +1,11 @@
 module Graph.M where
 
-
 open import Data.Product
 open import Data.Sum
 open import Relation.Binary.PropositionalEquality
 
 open import Graph.Base
-import M
-
-open M.NonIndexed
+open import M
 
 
 expandF

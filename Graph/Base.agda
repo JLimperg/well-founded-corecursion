@@ -20,7 +20,7 @@ open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
 open import Size
 
-import M
+open import M
 
 
 open Data.List.Any.Membership-≡
@@ -249,8 +249,8 @@ fmap-GraphF f (branch l r) = branch (f l) (f r)
 -- Graphs via M-types
 
 
-GraphMF : M.NonIndexed.Container _
-GraphMF = Shape M.NonIndexed.▷ Position
+GraphMF : Container _
+GraphMF = Shape ▷ Position
   module _ where
     data Shape : Set where
       tip branch : Shape
@@ -258,9 +258,6 @@ GraphMF = Shape M.NonIndexed.▷ Position
     Position : Shape → Set
     Position tip = ⊥
     Position branch = ⊤ ⊎ ⊤
-
-
-open M.NonIndexed
 
 
 GraphM : Size → Set
