@@ -12,3 +12,7 @@ defined as an M-type but just needs to have a particular structure.
 The `Graph/` directory contains a usage example with two implementations of the
 same function: With `fixM` in `Graph/M.agda` and without in
 `Graph/Direct.agda`. Definitions common to both are in `Graph/Base.agda`.
+
+The `Filter/` directory contains a somewhat unrealistic but illustrative
+application of `fixM` to the problem of filtering streams. It demonstrates
+particularly the use of `fixM-unfold`.
