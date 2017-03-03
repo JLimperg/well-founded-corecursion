@@ -7,8 +7,11 @@ open import Data.Product
 open import Function
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; module Inverse-image)
+open import Relation.Binary
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; inspect ; [_] ; Extensionality)
+open import Relation.Binary.HeterogeneousEquality using
+  (_≅_ ; refl ; ≡-to-≅)
 open import Size using (∞)
 
 open import Filter.Base
@@ -49,17 +52,38 @@ module _ {a} {A : Set a} where
     filter = fixM <[p]-wf filterF
 
 
-    postulate
-      funext : ∀ {a b} → Extensionality a b
+    filterF-ext : ∀ x {f f' g g'}
+      → (∀ y → f y ≡ f' y)
+      → (∀ y y<x → g y y<x ≅F g' y y<x)
+      → filterF x f g ≅F filterF x f' g'
+    filterF-ext x f-eq g-eq with p (head x) | inspect p (head x)
+    ... | true  | _ = refl , refl , (λ _ _ _ → ≡-to-≅ (f-eq _))
+    ... | false | _
+        = refl , proj₁ (proj₂ (g-eq _ _)) , proj₂ (proj₂ (g-eq _ _))
+
+
+    filter-unfold' : ∀ xs
+      →  inf (filter xs)
+      ≅F filterF xs filter (λ x _ → inf (filter x))
+    filter-unfold' = fixM-unfold <[p]-wf filterF filterF-ext
+
+    filter-unfold'' : ∀ xs
+      → filterF xs filter (λ x _ → inf (filter x))
+      ≡ inf
+          (if p (head xs)
+             then (cons (head xs) (filter (tail xs)))
+             else (filter (tail xs)))
+    filter-unfold'' xs with p (head xs) | inspect p (head xs)
+    ... | true  | _ = refl
+    ... | false | _ = refl
 
 
     filter-unfold : ∀ xs
-      → inf (filter xs)
-      ≡ inf (if p (head xs)
-               then cons (head xs) (filter (tail xs))
-               else filter (tail xs))
+      →  filter xs
+      ≅M (if p (head xs)
+            then (cons (head xs) (filter (tail xs)))
+            else (filter (tail xs)))
     filter-unfold xs
-      rewrite fixM-unfold <[p]-wf filterF (funext⇒F-ext funext filterF) xs
-      with p (head xs) | inspect p (head xs)
-    ...  | true        | _                   = refl
-    ...  | false       | _                   = refl
+        = trans (filter-unfold' xs) (reflexive (filter-unfold'' xs))
+      where
+        open Setoid (≅F-setoid (StreamC A) ∞)

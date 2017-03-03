@@ -1,18 +1,16 @@
 module M.Indexed where
 
-open import Data.Empty
-open import Data.Product
-open import Data.Sum
-open import Data.Unit
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; Acc ; acc)
 open import Level using (_⊔_)
-open import Relation.Binary using (Rel)
+open import Relation.Binary.Indexed.Extra using (Rel ; Setoid ; on-setoid)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; Extensionality)
+open import Relation.Binary.HeterogeneousEquality as Het using
+  (_≅_ ; refl)
 open import Size using (Size ; Size<_ ; ∞)
 
-open import Data.Container.Indexed public using
+open import Data.Container.Indexed.Extra as Cont public using
   (Container ; _◃_/_ ; ⟦_⟧)
 
 
@@ -25,21 +23,43 @@ record M
   : Set (lo ⊔ lc ⊔ lr) where
   coinductive
   field
-    inf : ∀ {t : Size< s} → ⟦ C ⟧ (M C t) o
+    inf : {t : Size< s} → ⟦ C ⟧ (M C t) o
 
 open M public
+
+
+≅F-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
+  → Setoid O _ _
+≅F-setoid C s = Cont.setoid C (Het.indexedSetoid (M C s))
+
+
+≅M-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
+  → {t : Size< s}
+  → Setoid O _ _
+≅M-setoid C _ {t} = on-setoid (≅F-setoid C t) (λ x → inf x {t})
+
+
+_≅F_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s}
+  → Rel (⟦ C ⟧ (M C s)) _
+_≅F_ {C = C} {s} = Setoid._≈_ (≅F-setoid C s)
+
+
+_≅M_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
+  → Rel (M C s) _
+_≅M_ {C = C} {s} = Setoid._≈_ (≅M-setoid C s)
 
 
 module Internal
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin l<} {In : Set lin} {o : O}
-  {_<_ : Rel In l<} (<-wf : Well-founded _<_)
+  {_<_ : In → In → Set l<} (<-wf : Well-founded _<_)
   (F : ∀ {t}
      → (x : In)
      → (In → M C t o)
      → ((y : In) → y < x → ⟦ C ⟧ (M C t) o)
      → ⟦ C ⟧ (M C t) o)
   where
+  -- TODO Can we generalise o?
 
 
   fixM' : ∀ {s} → (x : In) → Acc _<_ x → M C s o
@@ -54,20 +74,19 @@ module Internal
   module _
     (F-ext : ∀ x {f f' g g'}
         → (∀ y → f y ≡ f' y)
-        → (∀ y y<x → g y y<x ≡ g' y y<x)
-        → F x f g ≡ F x f' g')
+        → (∀ y y<x → g y y<x ≅F g' y y<x)
+        → F x f g ≅F F x f' g')
     where
 
     fixM'-Acc-irrelevant : ∀ {x} (acc acc' : Acc _<_ x)
-      → inf (fixM' x acc) ≡ inf (fixM' x acc')
-    fixM'-Acc-irrelevant (acc rs) (acc rs') = F-ext _ (λ _ → refl) lem
-      where
-        lem : ∀ y y<x
-          → inf (fixM' y (rs y y<x)) ≡ inf (fixM' y (rs' y y<x))
-        lem y y<x rewrite fixM'-Acc-irrelevant (rs y y<x) (rs' y y<x) = refl
+      → fixM' x acc ≅M fixM' x acc'
+    fixM'-Acc-irrelevant (acc rs) (acc rs')
+        = F-ext _
+            (λ _ → refl)
+            (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (rs' y y<x))
 
 
-    fixM-unfold : ∀ x → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
+    fixM-unfold : ∀ x → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
     fixM-unfold x with (<-wf x)
     ... | (acc rs)
         = F-ext _
