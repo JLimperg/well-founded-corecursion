@@ -1,13 +1,14 @@
 module M.Indexed where
 
+open import Data.Product
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; Acc ; acc)
-open import Level using (_⊔_)
+open import Level using (_⊔_ ; Level)
 open import Relation.Binary.Indexed.Extra using (Rel ; Setoid ; on-setoid)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; Extensionality)
 open import Relation.Binary.HeterogeneousEquality as Het using
-  (_≅_ ; refl)
+  (_≅_ ; refl ; ≅-to-≡ ; ≡-to-≅)
 open import Size using (Size ; Size<_ ; ∞)
 
 open import Data.Container.Indexed.Extra as Cont public using
@@ -28,13 +29,14 @@ record M
 open M public
 
 
+-- We could generalise this from (M C s) to an arbitray (A : O → Set la), but
+-- for some reason this kills type inference.
 ≅F-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
   → Setoid O _ _
 ≅F-setoid C s = Cont.setoid C (Het.indexedSetoid (M C s))
 
 
-≅M-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
-  → {t : Size< s}
+≅M-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) s {t : Size< s}
   → Setoid O _ _
 ≅M-setoid C _ {t} = on-setoid (≅F-setoid C t) (λ x → inf x {t})
 
@@ -44,12 +46,51 @@ _≅F_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s}
 _≅F_ {C = C} {s} = Setoid._≈_ (≅F-setoid C s)
 
 
+module Internal₁ where
+
+  -- Copied the following from Data.Container.Indexed, where it is sadly
+  -- private.
+  Eq⇒≅ : ∀ {i o c r ℓ} {I : Set i} {O : Set o}
+    → {C : Container I O c r} {X : I → Set ℓ} {o₁ o₂ : O}
+    → {xs : ⟦ C ⟧ X o₁} {ys : ⟦ C ⟧ X o₂}
+    → Het.Extensionality r ℓ
+    → Cont.Eq C X X (λ x₁ x₂ → x₁ ≅ x₂) xs ys
+    → xs ≅ ys
+  Eq⇒≅ {xs = c , k} {.c , k′} ext (refl , refl , k≈k′) =
+    Het.cong (_,_ c) (ext (λ _ → refl) (λ r → k≈k′ r r refl))
+
+
+≅F⇒≅ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {o₁ o₂}
+  → {x : ⟦ C ⟧ (M C s) o₁} {y : ⟦ C ⟧ (M C s) o₂}
+  → Het.Extensionality lr (lo ⊔ lc ⊔ lr)
+  → x ≅F y
+  → x ≅ y
+≅F⇒≅ {C = C} {s} = Internal₁.Eq⇒≅ {X = M C s}
+
+
 _≅M_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
   → Rel (M C s) _
 _≅M_ {C = C} {s} = Setoid._≈_ (≅M-setoid C s)
 
 
-module Internal
+M-Extensionality : (lo lc lr : Level) → Set _
+M-Extensionality lo lc lr
+    = ∀ {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s} {o₁ o₂}
+    → {x : M C s o₁} {y : M C s o₂}
+    → inf x ≅ inf y
+    → x ≅ y
+
+
+≅M⇒≅ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
+  → ∀ {o₁ o₂} {x : M C s o₁} {y : M C s o₂}
+  → M-Extensionality lo lc lr
+  → Het.Extensionality lr (lo ⊔ lc ⊔ lr)
+  → x ≅M y
+  → x ≅ y
+≅M⇒≅ M-ext ≅-ext eq = M-ext (≅F⇒≅ ≅-ext eq)
+
+
+module Internal₂
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin l<} {In : Set lin} {o : O}
   {_<_ : In → In → Set l<} (<-wf : Well-founded _<_)
@@ -73,9 +114,9 @@ module Internal
 
   module _
     (F-ext : ∀ x {f f' g g'}
-        → (∀ y → f y ≡ f' y)
-        → (∀ y y<x → g y y<x ≅F g' y y<x)
-        → F x f g ≅F F x f' g')
+       → (∀ y → f y ≡ f' y)
+       → (∀ y y<x → g y y<x ≅F g' y y<x)
+       →  F x f g ≅F F x f' g')
     where
 
     fixM'-Acc-irrelevant : ∀ {x} (acc acc' : Acc _<_ x)
@@ -86,7 +127,8 @@ module Internal
             (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (rs' y y<x))
 
 
-    fixM-unfold : ∀ x → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
+    fixM-unfold : ∀ x
+      → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
     fixM-unfold x with (<-wf x)
     ... | (acc rs)
         = F-ext _
@@ -94,29 +136,42 @@ module Internal
             (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (<-wf y))
 
 
-open Internal public using (fixM ; fixM-unfold)
+  ≅-ext-to-≡-ext : ∀ {a b} → Het.Extensionality a b → Extensionality a b
+  ≅-ext-to-≡-ext ≅-ext f-eq
+      = ≅-to-≡ (≅-ext (λ _ → refl) (λ x → ≡-to-≅ (f-eq x)))
 
 
-funext⇒F-ext
-  : (∀ {a b} → Extensionality a b)
-  → ∀ {a b c d e g h} {A : Set a} {B : A → Set b} {C : ∀ a → B a → Set c}
-      {D : A → Set d} {E : ∀ a → D a → Set e}
-      {G : ∀ a (d : D a) → E a d → Set g} {H : Set h}
-      (F : ∀ a
-         → ((b : B a) → C a b)
-         → ((d : D a) → (e : E a d) → G a d e)
-         → H)
-      x {f f' g g'}
-  → (∀ y → f y ≡ f' y)
-  → (∀ y z → g y z ≡ g' y z)
-  → F x f g ≡ F x f' g'
-funext⇒F-ext funext F x {f} {f'} {g} {g'} eq-f eq-g = lem
-  where
-    f≡f' : f ≡ f'
-    f≡f' = funext eq-f
+  -- TODO We should require extensionality only at specific levels. This will
+  -- mean some fussing around with lemmae like (Extensionality (a ⊔ c) (b ⊔ d) →
+  -- Extensionality a b).
+  F-ext
+    : (∀ {a b} → Het.Extensionality a b)
+    → ∀ x {f f' g g'}
+    → (∀ y → f y ≡ f' y)
+    → (∀ y y<x → g y y<x ≅F g' y y<x)
+    → F x f g ≅F F x f' g'
+  F-ext ≅-ext x {f} {f'} {g} {g'} eq-f eq-g = go
+    where
+      module S = Setoid (≅F-setoid C ∞)
 
-    g≡g' : g ≡ g'
-    g≡g' = funext (λ y → funext (eq-g y))
+      ≡-ext : ∀ {a b} → Extensionality a b
+      ≡-ext = ≅-ext-to-≡-ext ≅-ext
 
-    lem : F x f g ≡ F x f' g'
-    lem rewrite f≡f' | g≡g' = refl
+      f≡f' : f ≡ f'
+      f≡f' = ≡-ext eq-f
+
+      g≡g' : g ≡ g'
+      g≡g' = ≡-ext (λ y → ≡-ext (λ y<x → ≅-to-≡ (≅F⇒≅ ≅-ext (eq-g y y<x))))
+
+      go : F x f g ≅F F x f' g'
+      go rewrite f≡f' | g≡g' = S.refl
+
+
+  fixM-unfold′
+    : (∀ {a b} → Het.Extensionality a b)
+    → ∀ x
+    → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
+  fixM-unfold′ ≅-ext x = ≅-to-≡ (≅F⇒≅ ≅-ext (fixM-unfold (F-ext ≅-ext) x))
+
+
+open Internal₂ public using (fixM ; fixM-unfold ; fixM-unfold′)
