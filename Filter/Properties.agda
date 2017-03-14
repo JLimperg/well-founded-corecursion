@@ -19,29 +19,29 @@ module Direct {a} {A : Set a} where
 
   open import M
 
-  data SubstreamF (Substream : Rel (Stream A ∞) a) : Rel (Stream A ∞) a where
+  data ⊆-F (_⊆_ : Rel (Stream A ∞) a) : Rel (Stream A ∞) a where
     take : ∀ {xs ys}
       → head xs ≡ head ys
-      → Substream (tail xs) (tail ys)
-      → SubstreamF Substream xs ys
+      → tail xs ⊆ tail ys
+      → ⊆-F _⊆_ xs ys
     skip : ∀ {xs ys}
-      → Substream xs (tail ys)
-      → SubstreamF Substream xs ys
+      → xs ⊆ tail ys
+      → ⊆-F _⊆_ xs ys
 
 
-  record Substream (s : Size) (xs ys : Stream A ∞) : Set a where
+  record _⊆[_]_ (xs : Stream A ∞) (s : Size) (ys : Stream A ∞) : Set a where
     coinductive
     field
-      force : ∀ {t : Size< s} → SubstreamF (Substream t) xs ys
+      force : ∀ {t : Size< s} → ⊆-F (_⊆[ t ]_) xs ys
 
-  open Substream
+  open _⊆[_]_
 
 
   substream-respects-≅M : ∀ {s xs xs' ys ys'}
     → xs ≅M xs'
     → ys ≅M ys'
-    → Substream s xs ys
-    → Substream s xs' ys'
+    → xs ⊆[ s ] ys
+    → xs' ⊆[ s ] ys'
   substream-respects-≅M
     {_} {xs} {xs'} {ys} {ys'}
     eq-xs@(_ , eq-head-xs , eq-tail-xs) eq-ys@(_ , eq-head-ys , eq-tail-ys) sub
@@ -49,7 +49,7 @@ module Direct {a} {A : Set a} where
     with force sub
   ... | take head-eq tail-sub = go
     where
-      go : SubstreamF (Substream t) xs' ys'
+      go : ⊆-F (_⊆[ t ]_) xs' ys'
       go
         rewrite ≅-to-≡ eq-head-xs
               | ≅-to-≡ eq-head-ys
@@ -64,24 +64,22 @@ module Direct {a} {A : Set a} where
       open Setoid (≅M-setoid (StreamC A) ∞) using (reflexive)
 
 
-  filter-Substream : ∀ {s} p (xs : Stream A ∞) → Substream s (filter p xs) xs
-  filter-Substream {s} p xs
-      = substream-respects-≅M
-          (S.sym {filter p xs} {filter-p-xs} (filter-unfold p xs)) (S.refl {xs})
-          go
+  filter-⊆ : ∀ {s} p (xs : Stream A ∞) → filter p xs ⊆[ s ] xs
+  filter-⊆ {s} p xs
+      = substream-respects-≅M filter-eq (S.refl {xs}) go
     where
       module S = Setoid (≅M-setoid (StreamC A) ∞)
 
-      filter-p-xs : Stream A ∞
-      filter-p-xs
-          = if p (head xs)
-              then (cons (head xs) (filter p (tail xs)))
-              else (filter p (tail xs))
 
-      go : Substream s filter-p-xs xs
+      filter-eq : filter-body p xs ≅M filter p xs
+      filter-eq = S.sym {filter p xs} {filter-body p xs} (filter-unfold p xs)
+      -- Why can't the implicit arguments be inferred?
+
+
+      go : filter-body p xs ⊆[ s ] xs
       go .force with p (head xs)
-      ... | true  = take refl (filter-Substream p (tail xs))
-      ... | false = skip (filter-Substream p (tail xs))
+      ... | true  = take refl (filter-⊆ p (tail xs))
+      ... | false = skip (filter-⊆ p (tail xs))
 
 
 module WithM {a} {A : Set a} where
@@ -108,11 +106,7 @@ module WithM {a} {A : Set a} where
   xs ⊆[ s ] ys = M (⊆-C A) s (xs , ys)
 
 
-  filter-unfold′ : ∀ p (xs : Stream A ∞) →
-    filter p xs ≡
-      (if p (head xs)
-         then cons (head xs) (filter p (tail xs))
-         else filter p (tail xs))
+  filter-unfold′ : ∀ p (xs : Stream A ∞) → filter p xs ≡ filter-body p xs
   filter-unfold′ p xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
     where
       postulate M-ext : M-Extensionality lzero a a ∞

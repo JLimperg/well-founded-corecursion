@@ -52,38 +52,39 @@ module _ {a} {A : Set a} where
     filter = fixM <[p]-wf filterF
 
 
-    filterF-ext : ∀ x {f f' g g'}
-      → (∀ y → f y ≡ f' y)
-      → (∀ y y<x → g y y<x ≅F g' y y<x)
-      → filterF x f g ≅F filterF x f' g'
-    filterF-ext x f-eq g-eq with p (head x) | inspect p (head x)
-    ... | true  | _ = refl , refl , (λ _ _ _ → ≡-to-≅ (f-eq _))
-    ... | false | _
-        = refl , proj₁ (proj₂ (g-eq _ _)) , proj₂ (proj₂ (g-eq _ _))
+    filter-body : Stream A ∞ → Stream A ∞
+    filter-body xs
+        = if p (head xs)
+            then cons (head xs) (filter (tail xs))
+            else filter (tail xs)
 
 
-    filter-unfold' : ∀ xs
-      →  inf (filter xs)
-      ≅F filterF xs filter (λ x _ → inf (filter x))
-    filter-unfold' = fixM-unfold <[p]-wf filterF filterF-ext
+    module Internal where
 
-    filter-unfold'' : ∀ xs
-      → filterF xs filter (λ x _ → inf (filter x))
-      ≡ inf
-          (if p (head xs)
-             then (cons (head xs) (filter (tail xs)))
-             else (filter (tail xs)))
-    filter-unfold'' xs with p (head xs) | inspect p (head xs)
-    ... | true  | _ = refl
-    ... | false | _ = refl
+      filterF-ext : ∀ x {f f' g g'}
+        → (∀ y → f y ≡ f' y)
+        → (∀ y y<x → g y y<x ≅F g' y y<x)
+        → filterF x f g ≅F filterF x f' g'
+      filterF-ext x f-eq g-eq with p (head x) | inspect p (head x)
+      ... | true  | _ = refl , refl , (λ _ _ _ → ≡-to-≅ (f-eq _))
+      ... | false | _
+          = refl , proj₁ (proj₂ (g-eq _ _)) , proj₂ (proj₂ (g-eq _ _))
 
 
-    filter-unfold : ∀ xs
-      →  filter xs
-      ≅M (if p (head xs)
-            then (cons (head xs) (filter (tail xs)))
-            else (filter (tail xs)))
+      filter-unfold′ : ∀ xs
+        → inf (filter xs) ≅F filterF xs filter (λ x _ → inf (filter x))
+      filter-unfold′ = fixM-unfold <[p]-wf filterF filterF-ext
+
+      filter-unfold″ : ∀ xs
+        → filterF xs filter (λ x _ → inf (filter x)) ≡ inf (filter-body xs)
+      filter-unfold″ xs with p (head xs) | inspect p (head xs)
+      ... | true  | _ = refl
+      ... | false | _ = refl
+
+
+    filter-unfold : ∀ xs → filter xs ≅M filter-body xs
     filter-unfold xs
-        = trans (filter-unfold' xs) (reflexive (filter-unfold'' xs))
+        = S.trans (Internal.filter-unfold′ xs)
+            (S.reflexive (Internal.filter-unfold″ xs))
       where
-        open Setoid (≅F-setoid (StreamC A) ∞)
+        module S = Setoid (≅F-setoid (StreamC A) ∞)
