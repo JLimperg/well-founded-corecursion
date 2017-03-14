@@ -7,8 +7,9 @@ open import Data.Unit
 open import Size using (Size ; Size<_ ; ∞)
 open import Relation.Binary using (Rel ; Setoid)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
-open import Relation.Binary.HeterogeneousEquality using (_≅_ ; refl ; ≅-to-≡)
-open import Level using (lift)
+open import Relation.Binary.HeterogeneousEquality as Het
+  using (_≅_ ; refl ; ≅-to-≡)
+open import Level using (lift) renaming (zero to lzero)
 
 open import Filter.Base
 open import Filter.M
@@ -107,17 +108,20 @@ module WithM {a} {A : Set a} where
   xs ⊆[ s ] ys = M (⊆-C A) s (xs , ys)
 
 
-  -- TODO If we are to eat our own dog food, we should reimplement the above.
-  -- Not sure I have the stomach though.
+  filter-unfold′ : ∀ p (xs : Stream A ∞) →
+    filter p xs ≡
+      (if p (head xs)
+         then cons (head xs) (filter p (tail xs))
+         else filter p (tail xs))
+  filter-unfold′ p xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
+    where
+      postulate M-ext : M-Extensionality lzero a a ∞
+      postulate ≅-ext : Het.Extensionality a a
 
-  -- filter-Substream : ∀ {s} p (xs : Stream A ∞) → filter p xs ⊆[ s ] xs
-  -- filter-Substream p xs .inf = ?
-  --   rewrite Stream-ext
-  --     {xs = filter p xs}
-  --     {if p (head xs)
-  --        then (cons (head xs) (filter p (tail xs)))
-  --        else filter p (tail xs)}
-  --     (filter-unfold p xs)
-  --   with p (head xs)
-  -- ...  | true  = ⊆-C.take refl , λ _ → filter-Substream p (tail xs)
-  -- ...  | false = ⊆-C.skip      , λ _ → filter-Substream p (tail xs)
+
+  filter-Substream : ∀ {s} p (xs : Stream A ∞) → filter p xs ⊆[ s ] xs
+  filter-Substream p xs .inf
+    rewrite filter-unfold′ p xs
+    with p (head xs)
+  ...  | true  = ⊆-C.take refl , λ _ → filter-Substream p (tail xs)
+  ...  | false = ⊆-C.skip      , λ _ → filter-Substream p (tail xs)
