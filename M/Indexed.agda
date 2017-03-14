@@ -31,6 +31,9 @@ open M public
 
 -- We could generalise this from (M C s) to an arbitray (A : O → Set la), but
 -- for some reason this kills type inference.
+-- TODO In the following, we hardcode heterogeneous equality as the underlying
+-- equivalence relation. This is sufficient for the purposes of fixM-unfold, but
+-- we may need the generalisation to an arbitrary setoid later.
 ≅F-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
   → Setoid O _ _
 ≅F-setoid C s = Cont.setoid C (Het.indexedSetoid (M C s))
@@ -41,6 +44,9 @@ open M public
 ≅M-setoid C _ {t} = on-setoid (≅F-setoid C t) (λ x → inf x {t})
 
 
+-- We could make s an index of this relation (and _≅M_ below)to allow equality
+-- between objects of different sizes. I haven't needed this yet and it would
+-- complicate matters somewhat, so I'm leaving the definition as is for now.
 _≅F_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s}
   → Rel (⟦ C ⟧ (M C s)) _
 _≅F_ {C = C} {s} = Setoid._≈_ (≅F-setoid C s)
@@ -73,9 +79,15 @@ _≅M_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
 _≅M_ {C = C} {s} = Setoid._≈_ (≅M-setoid C s)
 
 
-M-Extensionality : (lo lc lr : Level) → Set _
-M-Extensionality lo lc lr
-    = ∀ {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s} {o₁ o₂}
+-- s and t are arguments of this definition rather than appearing on the
+-- right-hand side because otherwise using a (p : M-Extensionality lo lc lr)
+-- in ≅M⇒≅ below fails due to the type (Size< s) potentially being empty. I'm
+-- not entirely sure why that is.
+-- Maybe we don't actually care about sizes other than ∞, but since I'm not
+-- certain, I prefer the more general version for now.
+M-Extensionality : (lo lc lr : Level) (s : Size) {t : Size< s} → Set _
+M-Extensionality lo lc lr s
+    = ∀ {O : Set lo} {C : Container O O lc lr} {o₁ o₂}
     → {x : M C s o₁} {y : M C s o₂}
     → inf x ≅ inf y
     → x ≅ y
@@ -83,7 +95,7 @@ M-Extensionality lo lc lr
 
 ≅M⇒≅ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
   → ∀ {o₁ o₂} {x : M C s o₁} {y : M C s o₂}
-  → M-Extensionality lo lc lr
+  → M-Extensionality lo lc lr s
   → Het.Extensionality lr (lo ⊔ lc ⊔ lr)
   → x ≅M y
   → x ≅ y
