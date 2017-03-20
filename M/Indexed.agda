@@ -102,6 +102,25 @@ M-Extensionality lo lc lr s
 ≅M⇒≅ M-ext ≅-ext eq = M-ext (≅F⇒≅ ≅-ext eq)
 
 
+module _
+  {lo lc lr} {O : Set lo} {C : Container O O lc lr}
+  {lin} {In : Set lin}
+  (P : In → O)
+  (F : ∀ {t}
+     → (x : In)
+     → ((y : In) → M C t (P y))
+     → ⟦ C ⟧ (M C t) (P x))
+  where
+
+  cofix : ∀ {s} → (x : In) → M C s (P x)
+  cofix x .inf = F x cofix
+
+
+  cofix-unfold : ∀ x
+    → inf (cofix x) ≡ F x cofix
+  cofix-unfold _ = refl
+
+
 module Internal₂
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin l<} {In : Set lin}

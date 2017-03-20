@@ -71,13 +71,30 @@ M-Extensionality l
 
 
 module _
+  {l lin} {C : Container l} {In : Set lin}
+  (F : ∀ {t}
+     → (x : In)
+     → (In → M C t)
+     → ⟦ C ⟧ (M C t))
+  where
+
+  cofix : ∀ {s} → In → M C s
+  cofix x .inf = F x cofix
+
+
+  cofix-unfold : ∀ x
+    → inf (cofix x) ≡ F x cofix
+  cofix-unfold _ = refl
+
+
+module _
   {l lin l<} {C : Container l} {In : Set lin}
   {_<_ : Rel In l<} (<-wf : Well-founded _<_)
   (F : ∀ {t}
-      → (x : In)
-      → (In → M C t)
-      → ((y : In) → y < x → ⟦ C ⟧ (M C t))
-      → ⟦ C ⟧ (M C t))
+     → (x : In)
+     → (In → M C t)
+     → ((y : In) → y < x → ⟦ C ⟧ (M C t))
+     → ⟦ C ⟧ (M C t))
   where
 
   fixM : In → M C ∞
