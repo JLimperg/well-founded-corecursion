@@ -81,7 +81,7 @@ module _
   where
 
   fixM : In → M C ∞
-  fixM = Ix.fixM <-wf F
+  fixM = Ix.fixM <-wf (λ _ → tt) F
 
 
   fixM-unfold
@@ -91,11 +91,11 @@ module _
         → F x f g ≅F F x f' g')
     → ∀ x
     → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
-  fixM-unfold = Ix.fixM-unfold <-wf F
+  fixM-unfold = Ix.fixM-unfold <-wf (λ _ → tt) F
 
 
   fixM-unfold′
     : (∀ {a b} → Extensionality a b)
     → ∀ x
     → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
-  fixM-unfold′ ≡-ext = Ix.fixM-unfold′ <-wf F (≡-ext-to-≅-ext ≡-ext)
+  fixM-unfold′ ≡-ext = Ix.fixM-unfold′ <-wf (λ _ → tt) F (≡-ext-to-≅-ext ≡-ext)

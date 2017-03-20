@@ -104,23 +104,23 @@ M-Extensionality lo lc lr s
 
 module Internal₂
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
-  {lin l<} {In : Set lin} {o : O}
+  {lin l<} {In : Set lin}
   {_<_ : In → In → Set l<} (<-wf : Well-founded _<_)
+  (P : In → O)
   (F : ∀ {t}
      → (x : In)
-     → (In → M C t o)
-     → ((y : In) → y < x → ⟦ C ⟧ (M C t) o)
-     → ⟦ C ⟧ (M C t) o)
+     → ((y : In) → M C t (P y))
+     → ((y : In) → y < x → ⟦ C ⟧ (M C t) (P y))
+     → ⟦ C ⟧ (M C t) (P x))
   where
-  -- TODO Can we generalise o?
 
 
-  fixM' : ∀ {s} → (x : In) → Acc _<_ x → M C s o
+  fixM' : ∀ {s} → (x : In) → Acc _<_ x → M C s (P x)
   fixM' x (acc rs) .inf
       = F x (λ y → fixM' y (<-wf y)) (λ y y<x → inf (fixM' y (rs y y<x)))
 
 
-  fixM : In → M C ∞ o
+  fixM : (x : In) → M C ∞ (P x)
   fixM x = fixM' x (<-wf x)
 
 
