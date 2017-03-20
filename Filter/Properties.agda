@@ -106,16 +106,25 @@ module WithM {a} {A : Set a} where
   xs ⊆[ s ] ys = M (⊆-C A) s (xs , ys)
 
 
-  filter-unfold′ : ∀ p (xs : Stream A ∞) → filter p xs ≡ filter-body p xs
-  filter-unfold′ p xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
-    where
-      postulate M-ext : M-Extensionality lzero a a ∞
-      postulate ≅-ext : Het.Extensionality a a
+  module _ (p : A → Bool) where
+
+    filter-unfold′ : ∀ xs → filter p xs ≡ filter-body p xs
+    filter-unfold′ xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
+      where
+        postulate M-ext : M-Extensionality lzero a a ∞
+        postulate ≅-ext : Het.Extensionality a a
 
 
-  filter-Substream : ∀ {s} p (xs : Stream A ∞) → filter p xs ⊆[ s ] xs
-  filter-Substream p xs .inf
-    rewrite filter-unfold′ p xs
-    with p (head xs)
-  ...  | true  = ⊆-C.take refl , λ _ → filter-Substream p (tail xs)
-  ...  | false = ⊆-C.skip      , λ _ → filter-Substream p (tail xs)
+    filter-⊆F : ∀ {t}
+      → (xs : Stream A ∞)
+      → ((ys : Stream A ∞) → filter p ys ⊆[ t ] ys)
+      → ⟦ ⊆-C A ⟧ (λ { (xs , ys) → xs ⊆[ t ] ys }) (filter p xs , xs)
+    filter-⊆F xs corec
+      rewrite filter-unfold′ xs
+      with p (head xs)
+    ... | true  = ⊆-C.take refl , λ _ → corec (tail xs)
+    ... | false = ⊆-C.skip      , λ _ → corec (tail xs)
+
+
+    filter-⊆ : ∀ xs → filter p xs ⊆[ ∞ ] xs
+    filter-⊆ xs = cofix _ filter-⊆F xs
