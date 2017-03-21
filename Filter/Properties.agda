@@ -9,7 +9,7 @@ open import Relation.Binary using (Rel ; Setoid)
 open import Relation.Binary.PropositionalEquality using (_≡_ ; refl)
 open import Relation.Binary.HeterogeneousEquality as Het
   using (_≅_ ; refl ; ≅-to-≡)
-open import Level using (lift) renaming (zero to lzero)
+open import Level using (Level ; lift) renaming (zero to lzero)
 
 open import Filter.Base
 open import Filter.M
@@ -82,7 +82,7 @@ module Direct {a} {A : Set a} where
       ... | false = skip (filter-⊆ p (tail xs))
 
 
-module WithM {a} {A : Set a} where
+module WithM {a : Level} where
 
   open import M.Indexed
 
@@ -102,11 +102,11 @@ module WithM {a} {A : Set a} where
       next {xs , ys} skip     _ = xs , tail ys
 
 
-  _⊆[_]_ : Stream A ∞ → Size → Stream A ∞ → Set _
-  xs ⊆[ s ] ys = M (⊆-C A) s (xs , ys)
+  _⊆[_]_ : ∀ {A : Set a} → Stream A ∞ → Size → Stream A ∞ → Set _
+  xs ⊆[ s ] ys = M (⊆-C _) s (xs , ys)
 
 
-  module _ (p : A → Bool) where
+  module _ {A : Set a} (p : A → Bool) where
 
     filter-unfold′ : ∀ xs → filter p xs ≡ filter-body p xs
     filter-unfold′ xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
