@@ -1,12 +1,13 @@
 module M.Indexed where
 
 open import Data.Product
+open import Function using (_∘_)
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; Acc ; acc)
-open import Level using (_⊔_ ; Level)
+open import Level using (_⊔_ ; Level ; Lift ; lift ; lower)
 open import Relation.Binary.Indexed.Extra using (Rel ; Setoid ; on-setoid)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_ ; refl ; Extensionality)
+  (_≡_ ; refl ; Extensionality ; extensionality-for-lower-levels)
 open import Relation.Binary.HeterogeneousEquality as Het using
   (_≅_ ; refl ; ≅-to-≡ ; ≡-to-≅)
 open import Size using (Size ; Size<_ ; ∞)
@@ -172,11 +173,25 @@ module Internal₂
       = ≅-to-≡ (≅-ext (λ _ → refl) (λ x → ≡-to-≅ (f-eq x)))
 
 
-  -- TODO We should require extensionality only at specific levels. This will
-  -- mean some fussing around with lemmae like (Extensionality (a ⊔ c) (b ⊔ d) →
-  -- Extensionality a b).
+  ≅-extensionality-for-lower-levels : ∀ {a₁ b₁} a₂ b₂
+    → Het.Extensionality (a₁ ⊔ a₂) (Level.suc b₁ ⊔ b₂)
+    → Het.Extensionality a₁ b₁
+  ≅-extensionality-for-lower-levels {a₁} {b₁} a₂ b₂ ≅-ext {B₁ = B₁} {B₂ = B₂} {f} {g} B₁≡B₂ f≅g
+      = go
+    where
+      B₁≡B₂′ : B₁ ≡ B₂
+      B₁≡B₂′
+          = extensionality-for-lower-levels a₂ b₂ (≅-ext-to-≡-ext ≅-ext) B₁≡B₂
+
+      go : f ≅ g
+      go rewrite B₁≡B₂′
+          = Het.cong
+              (λ h → lower {ℓ = b₂ ⊔ Level.suc b₁} ∘ h ∘ lift {ℓ = a₂})
+              (≅-ext (λ _ → refl) (Het.cong lift ∘ f≅g ∘ lower))
+
+
   F-ext
-    : (∀ {a b} → Het.Extensionality a b)
+    : Het.Extensionality (lin ⊔ l< ⊔ lr) (Level.suc (lr ⊔ lc ⊔ lo) ⊔ l<)
     → ∀ x {f f' g g'}
     → (∀ y → f y ≡ f' y)
     → (∀ y y<x → g y y<x ≅F g' y y<x)
@@ -185,21 +200,28 @@ module Internal₂
     where
       module S = Setoid (≅F-setoid C ∞)
 
-      ≡-ext : ∀ {a b} → Extensionality a b
-      ≡-ext = ≅-ext-to-≡-ext ≅-ext
+      ≡-ext₁ : Extensionality lin (lr ⊔ lc ⊔ lo)
+      ≡-ext₁ = extensionality-for-lower-levels (l< ⊔ lr) (Level.suc (lr ⊔ lc ⊔ lo) ⊔ l<) (≅-ext-to-≡-ext ≅-ext)
+
+      ≡-ext₂ : Extensionality lin (l< ⊔ lr ⊔ lc ⊔ lo)
+      ≡-ext₂ = extensionality-for-lower-levels (l< ⊔ lr) (Level.suc (lr ⊔ lc ⊔ lo)) (≅-ext-to-≡-ext ≅-ext)
+
+      ≡-ext₃ : Extensionality l< (lr ⊔ lc ⊔ lo)
+      ≡-ext₃ = extensionality-for-lower-levels (lin ⊔ lr) (Level.suc (lr ⊔ lc ⊔ lo) ⊔ l<) (≅-ext-to-≡-ext ≅-ext)
 
       f≡f' : f ≡ f'
-      f≡f' = ≡-ext eq-f
+      f≡f' = ≡-ext₁ eq-f
 
       g≡g' : g ≡ g'
-      g≡g' = ≡-ext (λ y → ≡-ext (λ y<x → ≅-to-≡ (≅F⇒≅ ≅-ext (eq-g y y<x))))
+      g≡g' = ≡-ext₂ (λ y → ≡-ext₃ (λ y<x → ≅-to-≡ (≅F⇒≅ (≅-extensionality-for-lower-levels (lin ⊔ l<) l< ≅-ext)
+              (eq-g y y<x))))
 
       go : F x f g ≅F F x f' g'
       go rewrite f≡f' | g≡g' = S.refl
 
 
   fixM-unfold′
-    : (∀ {a b} → Het.Extensionality a b)
+    : Het.Extensionality (lin ⊔ l< ⊔ lr) (Level.suc (lr ⊔ lc ⊔ lo) ⊔ l<)
     → ∀ x
     → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
   fixM-unfold′ ≅-ext x = ≅-to-≡ (≅F⇒≅ ≅-ext (fixM-unfold (F-ext ≅-ext) x))
