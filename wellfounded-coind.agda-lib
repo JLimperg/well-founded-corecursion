@@ -1,0 +1,3 @@
+name: wellfounded-coind
+depend: standard-library
+include: src

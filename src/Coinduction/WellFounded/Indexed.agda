@@ -1,17 +1,18 @@
-module M.Indexed where
+module Coinduction.WellFounded.Indexed where
 
+open import Coinduction.WellFounded.Internal.Relation using
+  (Rel ; Setoid ; on-setoid)
 open import Data.Product
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (Well-founded ; Acc ; acc)
 open import Level using (_⊔_ ; Level)
-open import Relation.Binary.Indexed.Extra using (Rel ; Setoid ; on-setoid)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; Extensionality)
 open import Relation.Binary.HeterogeneousEquality as Het using
   (_≅_ ; refl ; ≅-to-≡ ; ≡-to-≅)
 open import Size using (Size ; Size<_ ; ∞)
 
-open import Data.Container.Indexed.Extra as Cont public using
+open import Coinduction.WellFounded.Internal.Container as Cont public using
   (Container ; _◃_/_ ; ⟦_⟧)
 
 

@@ -17,7 +17,7 @@ open import Filter.M
 
 module Direct {a} {A : Set a} where
 
-  open import M
+  open import Coinduction.WellFounded
 
   data ⊆-F (_⊆_ : Rel (Stream A ∞) a) : Rel (Stream A ∞) a where
     take : ∀ {xs ys}
@@ -84,7 +84,7 @@ module Direct {a} {A : Set a} where
 
 module WithM {a : Level} where
 
-  open import M.Indexed
+  open import Coinduction.WellFounded.Indexed
 
   ⊆-C : (A : Set a)
     → Container (Stream A ∞ × Stream A ∞) (Stream A ∞ × Stream A ∞) _ _

@@ -8,7 +8,7 @@ open import Relation.Binary.HeterogeneousEquality as Het using (_≅_ ; refl)
 open import Size using (∞)
 
 open import Graph.Base
-open import M
+open import Coinduction.WellFounded
 
 
 expandF

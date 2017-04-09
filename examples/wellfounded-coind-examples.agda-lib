@@ -1,0 +1,3 @@
+name: wellfounded-coind-examples
+depend: wellfounded-coind
+include: .

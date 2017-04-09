@@ -2,17 +2,11 @@
 
 This repository contains work-in-progress experiments in integrating
 well-founded recursion and corecursion in Agda. Specifically, the code in
-`M.agda` implements a fixed-point combinator (`fixM`) which allows recursive
-calls to *either* give the next observation of the constructed coinductive data
-structure (as in ordinary corecursive function definitions) *or* decrease a
-well-founded relation (as in well-founded recursion). `Generic.agda` implements
-a reflection-based variant where the user's coinductive data type needs not be
-defined as an M-type but just needs to have a particular structure.
+`Coinduction/WellFounded/Indexed.agda` implements a fixed-point combinator
+(`fixM`) which allows recursive calls to *either* give the next observation
+of the constructed coinductive data structure (as in ordinary corecursive
+function definitions) *or* decrease a well-founded relation (as in well-founded
+recursion).
 
-The `Graph/` directory contains a usage example with two implementations of the
-same function: With `fixM` in `Graph/M.agda` and without in
-`Graph/Direct.agda`. Definitions common to both are in `Graph/Base.agda`.
-
-The `Filter/` directory contains a somewhat unrealistic but illustrative
-application of `fixM` to the problem of filtering streams. It demonstrates
-particularly the use of `fixM-unfold`.
+The `examples` directory contains applications of `fixM` to various simple
+problems.

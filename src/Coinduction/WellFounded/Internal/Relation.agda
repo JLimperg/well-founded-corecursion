@@ -1,4 +1,4 @@
-module Relation.Binary.Indexed.Extra where
+module Coinduction.WellFounded.Internal.Relation where
 
 open import Relation.Binary.Indexed public
 

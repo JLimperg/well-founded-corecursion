@@ -1,4 +1,4 @@
-module M where
+module Coinduction.WellFounded where
 
 
 open import Data.Unit
@@ -15,11 +15,11 @@ open import Size using (Size ; Size<_ ; ∞)
 
 open import Data.Container public using (Container ; _▷_ ; ⟦_⟧)
 
-open import M.Indexed as Ix public using (inf)
+open import Coinduction.WellFounded.Indexed as Ix public using (inf)
 -- TODO While defining the following notions via their generalisations in
--- M.Indexed is elegant, it also litters goals with garbage if Agda gets
+-- Ix is elegant, it also litters goals with garbage if Agda gets
 -- simplification wrong. Thus, we should probably reimplement everything
--- independent of M.Indexed, then provide conversion lemmas if necessary.
+-- independent of Ix, then provide conversion lemmas if necessary.
 
 
 container⇒indexedContainer : ∀ {l} → Container l → Ix.Container ⊤ ⊤ _ _

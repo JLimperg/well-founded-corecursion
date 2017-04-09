@@ -8,7 +8,7 @@ open import Relation.Binary.PropositionalEquality
   using (_≡_ ; _≢_)
 open import Size using (Size ; ↑_)
 
-open import M
+open import Coinduction.WellFounded
 
 
 StreamC : ∀ {a} → Set a → Container a

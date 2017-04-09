@@ -1,4 +1,4 @@
-module Data.Container.Indexed.Extra where
+module Coinduction.WellFounded.Internal.Container where
 
 open import Data.Product
 open import Relation.Binary.Indexed

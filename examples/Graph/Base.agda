@@ -3,9 +3,6 @@ module Graph.Base where
 
 open import Data.Empty
 open import Data.Nat
-open import Data.List
-open import Data.List.Any
-open import Data.List.Extra
 open import Data.Product
 open import Data.Sum
 open import Data.Unit hiding (_≟_)
@@ -20,10 +17,8 @@ open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.PropositionalEquality renaming ([_] to ⟨_⟩)
 open import Size
 
-open import M
-
-
-open Data.List.Any.Membership-≡
+open import Graph.List
+open import Coinduction.WellFounded
 
 
 -- LoopyTree data type and operations
@@ -149,8 +144,8 @@ Closed-subst (branch l r) s-closed
     = branch (Closed-subst l s-closed) (Closed-subst r s-closed)
 Closed-subst {x = y} (var {x = x} elem) s-closed with x ≟ y | elem
 ... | yes x≡y | _ rewrite x≡y = s-closed
-... | no x≢y | Any.here x≡y = ⊥-elim (x≢y x≡y)
-... | no x≢y | Any.there elem' = var elem'
+... | no x≢y | here x≡y = ⊥-elim (x≢y x≡y)
+... | no x≢y | there elem' = var elem'
 Closed-subst {x = y} (nu {xs} {x} {t} cl) s-closed with x ≟ y
 ... | yes x≡y rewrite x≡y = nu (ClosedWrt-⊆ ⊆-duplicate cl)
 ... | no x≢y

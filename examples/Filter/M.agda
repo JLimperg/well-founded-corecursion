@@ -15,7 +15,7 @@ open import Relation.Binary.HeterogeneousEquality using
 open import Size using (∞)
 
 open import Filter.Base
-open import M
+open import Coinduction.WellFounded
 
 
 module _ {a} {A : Set a} where
