@@ -44,7 +44,7 @@ open M public
 ≅M-setoid C _ {t} = on-setoid (≅F-setoid C t) (λ x → inf x {t})
 
 
--- We could make s an index of this relation (and _≅M_ below)to allow equality
+-- We could make s an index of this relation (and _≅M_ below) to allow equality
 -- between objects of different sizes. I haven't needed this yet and it would
 -- complicate matters somewhat, so I'm leaving the definition as is for now.
 _≅F_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s}
@@ -172,9 +172,10 @@ module Internal₂
       = ≅-to-≡ (≅-ext (λ _ → refl) (λ x → ≡-to-≅ (f-eq x)))
 
 
-  -- TODO We should require extensionality only at specific levels. This will
-  -- mean some fussing around with lemmae like (Extensionality (a ⊔ c) (b ⊔ d) →
-  -- Extensionality a b).
+  -- We could change F-ext to require extensionality only at specific levels
+  -- (namely some upper bound of lo, lc, lr, lin, and l<). However, this
+  -- complicates the implementation considerably, and I don't see a reason for
+  -- users to postulate extensionality only at specific levels.
   F-ext
     : (∀ {a b} → Het.Extensionality a b)
     → ∀ x {f f' g g'}
