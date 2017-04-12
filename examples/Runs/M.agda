@@ -1,7 +1,7 @@
 module Runs.M where
 
 open import Data.Bool using (if_then_else_)
-open import Data.List using (List ; [] ; _∷_)
+open import Data.List using (List ; [] ; _∷_ ; [_] ; _∷ʳ_)
 open import Data.Vec as Vec using (Vec ; [] ; _∷_)
 open import Data.Nat
 open import Data.Product
@@ -19,6 +19,9 @@ open import Size
 
 open import Coinduction.WellFounded
 open import Runs.Nat
+
+
+-- Basic data structures etc.
 
 
 StreamC : Set → Container lzero
@@ -49,57 +52,36 @@ cons : ∀ {s A} → A → Stream A s → Stream A (↑ s)
 cons x xs .inf = x , λ _ → xs
 
 
-_<<_ : Rel (ℕ × Stream ℕ ∞) lzero
+_<<_ : ∀ {a} {A : Set a} → Rel (A × Stream ℕ ∞) lzero
 _<<_ =  _<′_ on (head ∘ proj₂)
 
 
-<<-wf : Well-founded _<<_
+<<-wf : ∀ {a} {A : Set a} → Well-founded (_<<_ {A = A})
 <<-wf = Inverse-image.well-founded _ <-well-founded
 
 
-runLengths′F : ∀ {t}
-  → (x : ℕ × Stream ℕ ∞)
-  → (ℕ × Stream ℕ ∞ → Stream ℕ t)
-  → (∀ y → y << x → StreamWhnf ℕ t)
-  → StreamWhnf ℕ t
-runLengths′F (n , xs) corec rec with head (tail xs) <′? head xs
-... | yes lt = rec (suc n , tail xs) lt
-... | no  _  = n , λ _ → corec (1 , tail xs)
+-- Definition of runs
 
 
-runLengths′ : ℕ × Stream ℕ ∞ → Stream ℕ ∞
-runLengths′ = fixM <<-wf runLengths′F
+runs′F : ∀ {t}
+  → (x : List ℕ × Stream ℕ ∞)
+  → (List ℕ × Stream ℕ ∞ → Stream (List ℕ) t)
+  → (∀ y → y << x → StreamWhnf (List ℕ) t)
+  → StreamWhnf (List ℕ) t
+runs′F (run , xs) corec rec with head (tail xs) <′? head xs
+... | yes lt = rec (run ∷ʳ head xs , tail xs) lt
+... | no  _  = run ∷ʳ head xs , λ _ → corec ([] , tail xs)
 
 
-runLengths : Stream ℕ ∞ → Stream ℕ ∞
-runLengths xs = runLengths′ (1 , xs)
+runs′ : List ℕ × Stream ℕ ∞ → Stream (List ℕ) ∞
+runs′ = fixM <<-wf runs′F
 
 
-runLengths′-body
-  : (ℕ → Stream ℕ ∞ → Stream ℕ ∞)
-  → ℕ
-  → Stream ℕ ∞
-  → Stream ℕ ∞
-runLengths′-body runLengths′ n xs
-    = if ⌊ head (tail xs) <′? head xs ⌋
-        then runLengths′ (suc n) (tail xs)
-        else cons n (runLengths′ 1 (tail xs))
+runs : Stream ℕ ∞ → Stream (List ℕ) ∞
+runs xs = runs′ ([] , xs)
 
 
-runLenghts′-unfold : ∀ n xs →
-  runLengths′ (n , xs) ≡ runLengths′-body (λ n xs → runLengths′ (n , xs)) n xs
-runLenghts′-unfold n xs = M-ext go
-  where
-    postulate
-      ≡-ext : ∀ {a b} → Extensionality a b
-      M-ext : ∀ {a} → M-Extensionality a
-
-    go : inf (runLengths′ (n , xs))
-       ≡ inf (runLengths′-body (λ n xs → runLengths′ (n , xs)) n xs)
-    go rewrite fixM-unfold′ <<-wf runLengths′F ≡-ext (n , xs)
-       with head (tail xs) <′? head xs
-    ... | yes _ = refl
-    ... | no  _ = refl
+-- A simple 'unit test':
 
 
 take : ∀ {A} → ℕ → Stream A ∞ → List A
@@ -115,5 +97,33 @@ cycle xs = go xs xs
     go xs (x ∷ y ∷ ys) .inf = x , λ _ → go xs (y ∷ ys)
 
 
-test : List ℕ
-test = take 10 (runLengths (cycle (0 ∷ 0 ∷ 1 ∷ 0 ∷ 2 ∷ 1 ∷ 0 ∷ 1 ∷ [])))
+test : List (List ℕ)
+test = take 10 (runs (cycle (0 ∷ 0 ∷ 1 ∷ 0 ∷ 2 ∷ 1 ∷ 0 ∷ 1 ∷ [])))
+
+
+-- Unfolding runs′
+
+
+runs′-body
+  : List ℕ
+  → Stream ℕ ∞
+  → Stream (List ℕ) ∞
+runs′-body run xs
+    = if ⌊ head (tail xs) <′? head xs ⌋
+        then runs′ ((run ∷ʳ head xs) ,  (tail xs))
+        else cons (run ∷ʳ head xs) (runs′ ([] , (tail xs)))
+
+
+runs′-unfold : ∀ run xs → runs′ (run , xs) ≡ runs′-body run xs
+runs′-unfold run xs = M-ext go
+  where
+    postulate
+      ≡-ext : ∀ {a b} → Extensionality a b
+      M-ext : ∀ {a} → M-Extensionality a
+
+    go : inf (runs′ (run , xs))
+       ≡ inf (runs′-body run xs)
+    go rewrite fixM-unfold′ <<-wf runs′F ≡-ext (run , xs)
+       with head (tail xs) <′? head xs
+    ... | yes _ = refl
+    ... | no  _ = refl
