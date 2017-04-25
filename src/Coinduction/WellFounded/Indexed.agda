@@ -106,7 +106,7 @@ M-Extensionality lo lc lr s
 module _
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin} {In : Set lin}
-  (P : In → O)
+  {P : In → O}
   (F : ∀ {t}
      → (x : In)
      → ((y : In) → M C t (P y))
@@ -126,7 +126,7 @@ module Internal₂
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin l<} {In : Set lin}
   {_<_ : In → In → Set l<} (<-wf : Well-founded _<_)
-  (P : In → O)
+  {P : In → O}
   (F : ∀ {t}
      → (x : In)
      → ((y : In) → M C t (P y))

@@ -127,4 +127,4 @@ module WithM {a : Level} where
 
 
     filter-⊆ : ∀ xs → filter p xs ⊆[ ∞ ] xs
-    filter-⊆ xs = cofix _ filter-⊆F xs
+    filter-⊆ xs = cofix filter-⊆F xs

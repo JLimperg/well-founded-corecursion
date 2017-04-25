@@ -198,7 +198,7 @@ module Internal₁ where
 
 
   runs′-⊂L : ∀ ys (x : In ys) → All (_⊂L ys) ∞ (Out x)
-  runs′-⊂L ys = Ix.fixM <<<-wf _ (runs′-⊂LF ys)
+  runs′-⊂L ys = Ix.fixM <<<-wf (runs′-⊂LF ys)
 
 
   runs-⊂L : ∀ xs → All (_⊂L xs) ∞ (runs xs)
