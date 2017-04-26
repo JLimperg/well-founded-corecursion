@@ -49,7 +49,7 @@ module _ {a} {A : Set a} where
 
 
     filter : Stream A ∞ → Stream A ∞
-    filter = fixM <[p]-wf filterF
+    filter = cofixWf <[p]-wf filterF
 
 
     filter-body : Stream A ∞ → Stream A ∞
@@ -73,7 +73,7 @@ module _ {a} {A : Set a} where
 
       filter-unfold′ : ∀ xs
         → inf (filter xs) ≅F filterF xs filter (λ x _ → inf (filter x))
-      filter-unfold′ = fixM-unfold <[p]-wf filterF filterF-ext
+      filter-unfold′ = cofixWf-unfold <[p]-wf filterF filterF-ext
 
       filter-unfold″ : ∀ xs
         → filterF xs filter (λ x _ → inf (filter x)) ≡ inf (filter-body xs)

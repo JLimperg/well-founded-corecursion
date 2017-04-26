@@ -97,22 +97,22 @@ module _
      → ⟦ C ⟧ (M C t))
   where
 
-  fixM : In → M C ∞
-  fixM = Ix.fixM <-wf F
+  cofixWf : In → M C ∞
+  cofixWf = Ix.cofixWf <-wf F
 
 
-  fixM-unfold
+  cofixWf-unfold
     : (∀ x {f f' g g'}
         → (∀ y → f y ≡ f' y)
         → (∀ y y<x → g y y<x ≅F g' y y<x)
         → F x f g ≅F F x f' g')
     → ∀ x
-    → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
-  fixM-unfold = Ix.fixM-unfold <-wf F
+    → inf (cofixWf x) ≅F F x cofixWf (λ y _ → inf (cofixWf y))
+  cofixWf-unfold = Ix.cofixWf-unfold <-wf F
 
 
-  fixM-unfold′
+  cofixWf-unfold′
     : (∀ {a b} → Extensionality a b)
     → ∀ x
-    → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
-  fixM-unfold′ ≡-ext = Ix.fixM-unfold′ <-wf F (≡-ext-to-≅-ext ≡-ext)
+    → inf (cofixWf x) ≡ F x cofixWf (λ y _ → inf (cofixWf y))
+  cofixWf-unfold′ ≡-ext = Ix.cofixWf-unfold′ <-wf F (≡-ext-to-≅-ext ≡-ext)

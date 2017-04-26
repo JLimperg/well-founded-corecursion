@@ -18,7 +18,7 @@ open import Coinduction.WellFounded.Indexed.Internal public using
   ; ≅M⇒≅
   ; cofix
   ; cofix-unfold
-  ; fixM
-  ; fixM-unfold
-  ; fixM-unfold′
+  ; cofixWf
+  ; cofixWf-unfold
+  ; cofixWf-unfold′
   )

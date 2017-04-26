@@ -48,7 +48,7 @@ runs′F (xs , run) corec rec with head (tail xs) <′? head xs
              , λ _ → corec (tail xs , [])
 
 runs′ : Stream ℕ ∞ × List ℕ → Stream (List ℕ) ∞
-runs′ = fixM <<-wf runs′F
+runs′ = cofixWf <<-wf runs′F
 
 
 runs : Stream ℕ ∞ → Stream (List ℕ) ∞
@@ -97,7 +97,7 @@ runs′-unfold xs run = M-ext go
 
     go : inf (runs′ (xs , run))
        ≡ inf (runs′-body (xs , run))
-    go rewrite fixM-unfold′ <<-wf runs′F ≡-ext (xs , run)
+    go rewrite cofixWf-unfold′ <<-wf runs′F ≡-ext (xs , run)
        with head (tail xs) <′? head xs
     ... | yes _ = refl
     ... | no  _ = refl
@@ -198,7 +198,7 @@ module Internal₁ where
 
 
   runs′-⊂L : ∀ ys (x : In ys) → All (_⊂L ys) ∞ (Out x)
-  runs′-⊂L ys = Ix.fixM <<<-wf (runs′-⊂LF ys)
+  runs′-⊂L ys = Ix.cofixWf <<<-wf (runs′-⊂LF ys)
 
 
   runs-⊂L : ∀ xs → All (_⊂L xs) ∞ (runs xs)

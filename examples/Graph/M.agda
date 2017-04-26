@@ -31,7 +31,7 @@ expandF t@(mkLoopyTreeWf (nu x t₁) contr closed) _ expand₂
 
 
 expand : ∀ {s} -> LoopyTreeWf -> GraphM s
-expand = fixM <<<-wf expandF
+expand = cofixWf <<<-wf expandF
 
 
 expandF-ext : ∀ x {corec corec' rec rec'}
@@ -59,4 +59,4 @@ expandF-ext t@(mkLoopyTreeWf (nu x tree) contractive closed) eq-corec eq-rec
 
 
 expand-unfold : ∀ x → inf (expand x) ≅F expandF x expand (λ y _ → inf (expand y))
-expand-unfold = fixM-unfold <<<-wf expandF expandF-ext
+expand-unfold = cofixWf-unfold <<<-wf expandF expandF-ext

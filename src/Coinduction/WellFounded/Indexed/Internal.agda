@@ -138,13 +138,13 @@ module _
   where
 
 
-  fixM' : ∀ {s} → (x : In) → Acc _<_ x → M C s (P x)
-  fixM' x (acc rs) .inf
-      = F x (λ y → fixM' y (<-wf y)) (λ y y<x → inf (fixM' y (rs y y<x)))
+  cofixWf′ : ∀ {s} → (x : In) → Acc _<_ x → M C s (P x)
+  cofixWf′ x (acc rs) .inf
+      = F x (λ y → cofixWf′ y (<-wf y)) (λ y y<x → inf (cofixWf′ y (rs y y<x)))
 
 
-  fixM : (x : In) → M C ∞ (P x)
-  fixM x = fixM' x (<-wf x)
+  cofixWf : (x : In) → M C ∞ (P x)
+  cofixWf x = cofixWf′ x (<-wf x)
 
 
   module _
@@ -154,52 +154,50 @@ module _
        →  F x f g ≅F F x f' g')
     where
 
-    fixM'-Acc-irrelevant : ∀ {x} (acc acc' : Acc _<_ x)
-      → fixM' x acc ≅M fixM' x acc'
-    fixM'-Acc-irrelevant (acc rs) (acc rs')
+    cofixWf′-Acc-irrelevant : ∀ {x} (acc acc' : Acc _<_ x)
+      → cofixWf′ x acc ≅M cofixWf′ x acc'
+    cofixWf′-Acc-irrelevant (acc rs) (acc rs')
         = F-ext _
             (λ _ → refl)
-            (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (rs' y y<x))
+            (λ y y<x → cofixWf′-Acc-irrelevant (rs y y<x) (rs' y y<x))
 
 
-    fixM-unfold : ∀ x
-      → inf (fixM x) ≅F F x fixM (λ y _ → inf (fixM y))
-    fixM-unfold x with (<-wf x)
+    cofixWf-unfold : ∀ x
+      → inf (cofixWf x) ≅F F x cofixWf (λ y _ → inf (cofixWf y))
+    cofixWf-unfold x with (<-wf x)
     ... | (acc rs)
         = F-ext _
             (λ _ → refl)
-            (λ y y<x → fixM'-Acc-irrelevant (rs y y<x) (<-wf y))
+            (λ y y<x → cofixWf′-Acc-irrelevant (rs y y<x) (<-wf y))
 
 
-  -- We could change F-ext to require extensionality only at specific levels
-  -- (namely some upper bound of lo, lc, lr, lin, and l<). However, this
+  -- We could change cofixWf-unfold′ to require extensionality only at specific
+  -- levels (namely some upper bound of lo, lc, lr, lin, and l<). However, this
   -- complicates the implementation considerably, and I don't see a reason for
   -- users to postulate extensionality only at specific levels.
-  F-ext
-    : (∀ {a b} → Het.Extensionality a b)
-    → ∀ x {f f' g g'}
-    → (∀ y → f y ≡ f' y)
-    → (∀ y y<x → g y y<x ≅F g' y y<x)
-    → F x f g ≅F F x f' g'
-  F-ext ≅-ext x {f} {f'} {g} {g'} eq-f eq-g = go
-    where
-      module S = Setoid (≅F-setoid C ∞)
-
-      ≡-ext : ∀ {a b} → Extensionality a b
-      ≡-ext = ≅-ext-to-≡-ext ≅-ext
-
-      f≡f' : f ≡ f'
-      f≡f' = ≡-ext eq-f
-
-      g≡g' : g ≡ g'
-      g≡g' = ≡-ext (λ y → ≡-ext (λ y<x → ≅-to-≡ (≅F⇒≅ ≅-ext (eq-g y y<x))))
-
-      go : F x f g ≅F F x f' g'
-      go rewrite f≡f' | g≡g' = S.refl
-
-
-  fixM-unfold′
+  cofixWf-unfold′
     : (∀ {a b} → Het.Extensionality a b)
     → ∀ x
-    → inf (fixM x) ≡ F x fixM (λ y _ → inf (fixM y))
-  fixM-unfold′ ≅-ext x = ≅-to-≡ (≅F⇒≅ ≅-ext (fixM-unfold (F-ext ≅-ext) x))
+    → inf (cofixWf x) ≡ F x cofixWf (λ y _ → inf (cofixWf y))
+  cofixWf-unfold′ ≅-ext x = ≅-to-≡ (≅F⇒≅ ≅-ext (cofixWf-unfold F-ext x))
+    where
+      F-ext
+        : ∀ x {f f' g g'}
+        → (∀ y → f y ≡ f' y)
+        → (∀ y y<x → g y y<x ≅F g' y y<x)
+        → F x f g ≅F F x f' g'
+      F-ext x {f} {f'} {g} {g'} eq-f eq-g = go
+        where
+          module S = Setoid (≅F-setoid C ∞)
+
+          ≡-ext : ∀ {a b} → Extensionality a b
+          ≡-ext = ≅-ext-to-≡-ext ≅-ext
+
+          f≡f' : f ≡ f'
+          f≡f' = ≡-ext eq-f
+
+          g≡g' : g ≡ g'
+          g≡g' = ≡-ext (λ y → ≡-ext (λ y<x → ≅-to-≡ (≅F⇒≅ ≅-ext (eq-g y y<x))))
+
+          go : F x f g ≅F F x f' g'
+          go rewrite f≡f' | g≡g' = S.refl
