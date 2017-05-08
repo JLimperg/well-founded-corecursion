@@ -1,12 +1,45 @@
-# Integrating well-founded recursion and corecursion
+# A cofixpoint combinator for mixed recursive-corecursive functions
 
-This repository contains work-in-progress experiments in integrating
-well-founded recursion and corecursion in Agda. Specifically, the code in
-`Coinduction/WellFounded/Indexed.agda` implements a fixed-point combinator
-(`cofixWf`) which allows recursive calls to *either* give the next observation
-of the constructed coinductive data structure (as in ordinary corecursive
-function definitions) *or* decrease a well-founded relation (as in well-founded
-recursion).
+This Agda library provides a cofixpoint combinator which does for productivity
+what well-fouded recursion does for termination: It allows you to have
+arbitrary recursive calls in your corecursive functions if you can prove them
+terminating. Functions of this kind are sometimes called mixed
+recursive-corecursive, and their naive encoding is usually not obviously
+productive, so Agda rejects them. See the examples for some functions that are
+relatively easy to implement using this library.
 
-The `examples` directory contains applications of `cofixWf` to various simple
-problems.
+## Agda compatibility (of latest release)
+
+2.5.2; standard library 0.13
+
+## Installation
+
+1. Move this folder to a path of your choice, for example
+   `~/.agda/lib/wellfounded-coind`.
+2. Add the following entry to your `~/.agda/libraries`:
+
+       ~/.agda/lib/wellfounded-coind/wellfounded-coind.agda-lib
+
+   (Substitute whatever path you chose in step 1.)
+
+It should now be possible to import modules from this library in any of your
+Agda projects.
+
+For details, read the
+[packaging](http://agda.readthedocs.io/en/latest/tools/package-system.html)
+section of Agda's documentation.
+
+## Documentation
+
+Currently just the examples (sorry!). Start with `examples/Runs`, which is the
+simplest and most complete one.
+
+## Versioning contract
+
+The `0.*` series should be treated as unstable, meaning that anything can
+change at any time. After that, we'll see; I'm not sure what would be a
+sensible versioning policy for dependently typed languages.
+
+## Namespace
+
+This library occupies the `Coinduction.WellFounded.**` module namespace.
