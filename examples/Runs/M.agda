@@ -15,6 +15,8 @@ open import Relation.Nullary.Decidable using (⌊_⌋)
 open import Relation.Binary using (Rel ; Setoid)
 open import Relation.Binary.PropositionalEquality as ≡ using
   (_≡_ ; refl; Extensionality)
+open import Relation.Binary.HeterogeneousEquality using
+  (≡-to-≅ ; ≅-to-≡)
 open import Size
 
 open import Coinduction.WellFounded
@@ -89,11 +91,11 @@ runs′-body (xs , run)
 
 
 runs′-unfold : ∀ xs run → runs′ (xs , run) ≡ runs′-body (xs , run)
-runs′-unfold xs run = M-ext go
+runs′-unfold xs run = M-Extensionality-from-Ix M-ext go
   where
     postulate
       ≡-ext : ∀ {a b} → Extensionality a b
-      M-ext : ∀ {a} → M-Extensionality a
+      M-ext : ∀ {a b c s} {t : Size< s} → M-Extensionality a b c s
 
     go : inf (runs′ (xs , run))
        ≡ inf (runs′-body (xs , run))

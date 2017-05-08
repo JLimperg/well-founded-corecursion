@@ -1,21 +1,19 @@
 module Coinduction.WellFounded.Internal where
 
-
+open import Data.Container using (Container ; _▷_ ; ⟦_⟧)
 open import Data.Unit
 open import Induction.WellFounded using (Well-founded)
-open import Level using (Level) renaming (suc to lsuc)
+open import Level using (Level) renaming (zero to lzero ; suc to lsuc)
 open import Relation.Binary using (Rel ; Setoid)
 open import Relation.Binary.Indexed using (_at_)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; Extensionality)
 open import Relation.Binary.HeterogeneousEquality as Het using
-  (_≅_ ; ≅-to-≡ ; ≡-ext-to-≅-ext)
+  (_≅_ ; ≅-to-≡ ; ≡-ext-to-≅-ext ; ≡-to-≅)
 open import Size using (Size ; Size<_ ; ∞)
 
-
-open import Data.Container using (Container ; _▷_ ; ⟦_⟧)
-
-open import Coinduction.WellFounded.Indexed as Ix public using (inf)
+open import Coinduction.WellFounded.Indexed as Ix public
+  using (inf ; M-Extensionality)
 -- TODO While defining the following notions via their generalisations in
 -- Ix is elegant, it also litters goals with garbage if Agda gets
 -- simplification wrong. Thus, we should probably reimplement everything
@@ -31,6 +29,9 @@ M : ∀ {l} → Container l → Size → Set _
 M C s = Ix.M (container⇒indexedContainer C) s tt
 
 
+-- TODO We should probably switch to the ≡ setoid rather than using the
+-- ≅ setoid (which does nothing for us). Part of the 'reimplement everything'
+-- plan.
 ≅F-setoid : ∀ {l} (C : Container l) (s : Size) → Setoid _ _
 ≅F-setoid C s = (Ix.≅F-setoid (container⇒indexedContainer C) s) at tt
 
@@ -54,20 +55,20 @@ _≅M_ : ∀ {l} {C : Container l} {s} {t : Size< s} → Rel (M C s) _
 _≅M_ {C = C} {s} = Setoid._≈_ (≅M-setoid C s)
 
 
-M-Extensionality : ∀ l → Set (lsuc l)
-M-Extensionality l
-    = ∀ {C : Container l} {s} {t : Size< s}
-    → {x y : M C s}
-    → inf x ≡ inf y
-    → x ≡ y
+M-Extensionality-from-Ix : ∀ {l s} {t : Size< s}
+  → Ix.M-Extensionality lzero l l s
+  → {C : Container l} {x y : M C s}
+  → inf x ≡ inf y
+  → x ≡ y
+M-Extensionality-from-Ix M-ext eq = ≅-to-≡ (M-ext (≡-to-≅ eq))
 
 
 ≅M⇒≡ : ∀ {l} {C : Container l} {s} {t : Size< s} {x y : M C s}
-  → M-Extensionality l
+  → M-Extensionality lzero l l s
   → Extensionality l (lsuc l)
   → x ≅M y
   → x ≡ y
-≅M⇒≡ M-ext ≡-ext eq = M-ext (≅F⇒≡ ≡-ext eq)
+≅M⇒≡ M-ext ≡-ext eq = M-Extensionality-from-Ix M-ext (≅F⇒≡ ≡-ext eq)
 
 
 module _
