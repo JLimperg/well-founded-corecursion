@@ -8,9 +8,10 @@ recursive-corecursive, and their naive encoding is usually not obviously
 productive, so Agda rejects them. See the examples for some functions that are
 relatively easy to implement using this library.
 
-## Agda compatibility (of latest release)
+## Tested build configurations
 
-2.5.2; standard library 0.13
+agda 2.5.2; agda-stdlib 0.13
+agda 2.5.3; agda-stdlib master@477ba28360133b1f5c45ce1b4e6b4efd467af331
 
 ## Installation
 
