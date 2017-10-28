@@ -17,7 +17,7 @@ Agda 2.5.3; agda-stdlib 0.14
 ### Version 0.1
 
 Agda 2.5.2; agda-stdlib 0.13
-Agda 2.5.3; agda-stdlib 477ba28360133b1f5c45ce1b4e6b4efd467af331
+Agda 2.5.3; agda-stdlib 0.14 (excluding examples!)
 
 ## Installation
 
