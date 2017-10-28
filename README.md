@@ -1,7 +1,7 @@
 # A cofixpoint combinator for mixed recursive-corecursive functions
 
 This Agda library provides a cofixpoint combinator which does for productivity
-what well-fouded recursion does for termination: It allows you to have
+what well-founded recursion does for termination: It allows you to have
 arbitrary recursive calls in your corecursive functions if you can prove them
 terminating. Functions of this kind are sometimes called mixed
 recursive-corecursive, and their naive encoding is usually not obviously
