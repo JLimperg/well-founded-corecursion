@@ -3,6 +3,7 @@ module Graph.Base where
 
 open import Data.Empty
 open import Data.Nat
+open import Data.Nat.Properties using (≤-refl)
 open import Data.Product
 open import Data.Sum
 open import Data.Unit hiding (_≟_)
@@ -203,7 +204,7 @@ map-LoopyTreeWf f f-contr f-closed t
 
 
 _<<<_ : Rel LoopyTreeWf lzero
-_<<<_ = _<′_ on nu-prefix-length ∘ LoopyTreeWf.tree
+_<<<_ = _<_ on nu-prefix-length ∘ LoopyTreeWf.tree
 
 
 <<<-wf : Well-founded _<<<_
@@ -219,7 +220,7 @@ nu-unfold-wf-<<< : ∀ x t contr closed
     in nu-unfold-wf t' <<< t'
 nu-unfold-wf-<<< x t (nu novar contr) closed
     rewrite subst-preserves-nu-prefix-length t x (nu x t) contr novar
-    = ≤′-refl
+    = ≤-refl
 
 
 -- Graphs directly
@@ -259,11 +260,11 @@ GraphM : Size → Set
 GraphM = M GraphMF
 
 
-tipM : ∀ {A} → ⟦ GraphMF ⟧ A
+tipM : ∀ {A : Set} → ⟦ GraphMF ⟧ A
 tipM = tip , λ()
 
 
-branchM : ∀ {A} → A → A → ⟦ GraphMF ⟧ A
+branchM : ∀ {A : Set} → A → A → ⟦ GraphMF ⟧ A
 branchM l r
     = branch ,
       λ where

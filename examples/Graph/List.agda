@@ -1,11 +1,9 @@
 module Graph.List where
 
-
 open import Data.List public
-open import Data.List.Any public using (module Membership-≡ ; here ; there)
+open import Data.List.Any public using (here ; there)
+open import Data.List.Any.Membership.Propositional public using (_∈_ ; _⊆_)
 open import Relation.Binary.PropositionalEquality using (refl)
-
-open Membership-≡ public
 
 
 ∷-⊆ : ∀ {a} {A : Set a} {xs ys} {x : A} → xs ⊆ ys → (x ∷ xs) ⊆ (x ∷ ys)

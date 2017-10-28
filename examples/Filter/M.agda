@@ -2,7 +2,7 @@ module Filter.M where
 
 open import Data.Bool
 open import Data.Empty
-open import Data.Nat using (_<′_)
+open import Data.Nat using (_<_)
 open import Data.Product
 open import Function
 open import Induction.Nat using (<-well-founded)
@@ -21,7 +21,7 @@ open import Coinduction.WellFounded
 module _ {a} {A : Set a} where
 
   _<[_]_ : Stream A ∞ → (A → Set) → Stream A ∞ → Set
-  xs <[ p ] ys = dist p xs <′ dist p ys
+  xs <[ p ] ys = dist p xs < dist p ys
 
 
   <[p]-wf : ∀ {p} → Well-founded _<[ p ]_

@@ -1,6 +1,6 @@
 module Filter.Base where
 
-open import Data.Nat using (ℕ ; _<′_)
+open import Data.Nat using (ℕ ; _<_)
 open import Data.Product
 open import Data.Unit
 open import Level using (Lift ; lift)
@@ -38,4 +38,4 @@ module _ {a} {A : Set a} where
     dist-0 : ∀ {p s} → dist p s ≡ 0 → p (head s)
     dist-monotone : ∀ {p s}
       → dist p s ≢ 0
-      → dist p (tail s) <′ dist p s
+      → dist p (tail s) < dist p s

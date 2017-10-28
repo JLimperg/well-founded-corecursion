@@ -12,7 +12,7 @@ open import Induction.WellFounded using (Well-founded ; module Inverse-image)
 open import Level using () renaming (zero to lzero ; suc to lsuc)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Decidable using (⌊_⌋)
-open import Relation.Binary using (Rel ; Setoid)
+open import Relation.Binary using (Rel ; Setoid ; Decidable)
 open import Relation.Binary.PropositionalEquality as ≡ using
   (_≡_ ; refl; Extensionality)
 open import Relation.Binary.HeterogeneousEquality using
@@ -29,7 +29,7 @@ open import Runs.Nat
 
 
 _<<_ : ∀ {A : Set} → Rel (Stream ℕ ∞ × A) lzero
-_<<_ (xs , _) (ys , _) = head xs <′ head ys
+_<<_ (xs , _) (ys , _) = head xs < head ys
 
 
 <<-wf : ∀ {A} → Well-founded (_<<_ {A = A})
@@ -44,7 +44,7 @@ runs′F : ∀ {t}
   → (Stream ℕ ∞ × List ℕ → Stream (List ℕ) t)
   → (∀ y → y << x → StreamWhnf (List ℕ) t)
   → StreamWhnf (List ℕ) t
-runs′F (xs , run) corec rec with head (tail xs) <′? head xs
+runs′F (xs , run) corec rec with head (tail xs) <? head xs
 ... | yes lt = rec (tail xs , run ∷ʳ head xs) lt
 ... | no  _  = run ∷ʳ head xs
              , λ _ → corec (tail xs , [])
@@ -85,7 +85,7 @@ runs′-body
   : (Stream ℕ ∞ × List ℕ)
   → Stream (List ℕ) ∞
 runs′-body (xs , run)
-    = if ⌊ head (tail xs) <′? head xs ⌋
+    = if ⌊ head (tail xs) <? head xs ⌋
         then runs′ (tail xs , run ∷ʳ head xs)
         else cons (run ∷ʳ head xs) (runs′ (tail xs , []))
 
@@ -100,7 +100,7 @@ runs′-unfold xs run = M-Extensionality-from-Ix M-ext go
     go : inf (runs′ (xs , run))
        ≡ inf (runs′-body (xs , run))
     go rewrite cofixWf-unfold′ <<-wf runs′F ≡-ext (xs , run)
-       with head (tail xs) <′? head xs
+       with head (tail xs) <? head xs
     ... | yes _ = refl
     ... | no  _ = refl
 
@@ -169,7 +169,7 @@ module Internal₁ where
       sub-run : run ⊂L ys
 
   _<<<_ : ∀ {ys ys′} → In ys → In ys′ → Set
-  x <<< y = head (In.xs x) <′ head (In.xs y)
+  x <<< y = head (In.xs x) < head (In.xs y)
 
   <<<-wf : ∀ {ys} → Well-founded {A = In ys} _<<<_
   <<<-wf = Inverse-image.well-founded _ <-well-founded
@@ -194,7 +194,7 @@ module Internal₁ where
       sub-tail-xs = ⊆-tail sub-xs
 
       go : AllWhnf (_⊂L ys) t (runs′-body (xs , run))
-      go with head (tail xs) <′? head xs
+      go with head (tail xs) <? head xs
       ... | yes p = rec (build-In _ _ sub-tail-xs sub-run′) p
       ... | no  _ = sub-run′ , λ _ → corec (build-In _ _ sub-tail-xs tt)
 

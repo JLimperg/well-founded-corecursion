@@ -7,7 +7,7 @@ open import Size
 
 
 data Graph : Size → Set
-record Graph∞ Size : Set
+record Graph∞ (s : Size) : Set
 
 
 data Graph where

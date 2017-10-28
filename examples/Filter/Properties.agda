@@ -61,14 +61,14 @@ module Direct {a} {A : Set a} where
           (substream-respects-≅M eq-xs
              (reflexive (≅-to-≡ (eq-tail-ys _ _ refl))) tail-sub)
     where
-      open Setoid (≅M-setoid (StreamC A) ∞) using (reflexive)
+      open Setoid (≅M-setoid (StreamC A) ∞ {∞}) using (reflexive)
 
 
   filter-⊆ : ∀ {s} p (xs : Stream A ∞) → filter p xs ⊆[ s ] xs
   filter-⊆ {s} p xs
       = substream-respects-≅M filter-eq (S.refl {xs}) go
     where
-      module S = Setoid (≅M-setoid (StreamC A) ∞)
+      module S = Setoid (≅M-setoid (StreamC A) ∞ {∞})
 
 
       filter-eq : filter-body p xs ≅M filter p xs
