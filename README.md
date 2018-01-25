@@ -38,8 +38,11 @@ section of Agda's documentation.
 
 ## Documentation
 
-Currently just the examples (sorry!). Start with `examples/Runs`, which is the
-simplest and most complete one.
+There is currently no comprehensive API documentation (sorry!). This repository
+contains a copy of my BSc thesis, `paper.pdf`, which describes the library in
+some detail, both from a user's and implementor's perspective. Some usage
+examples may also be found in `examples/`. Start with `examples/Runs`, which is
+the simplest and most complete.
 
 ## Versioning contract
 
