@@ -1,8 +1,13 @@
 # Changelog for wellfounded-coind
 
+## 0.0.4
+
+- Update examples and library to work with Agda 2.5.4/agda-stdlib 0.17.
+  This release is no longer compatible with older stdlib versions.
+
 ## 0.0.3
 
-- Update example to work with Agda 2.5.4/agda-stdlib 0.16. As with v0.0.2,
+- Update examples to work with Agda 2.5.4/agda-stdlib 0.16. As with v0.0.2,
   there were no changes to the library itself.
 
 ## 0.0.2
