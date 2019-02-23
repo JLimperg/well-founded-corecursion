@@ -5,8 +5,8 @@ open import Data.Empty
 open import Data.Nat using (_<_)
 open import Data.Product
 open import Function
-open import Induction.Nat using (<-well-founded)
-open import Induction.WellFounded using (Well-founded ; module Inverse-image)
+open import Induction.Nat using (<-wellFounded)
+open import Induction.WellFounded using (WellFounded ; module Inverse-image)
 open import Relation.Binary
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; inspect ; [_] ; Extensionality)
@@ -24,8 +24,8 @@ module _ {a} {A : Set a} where
   xs <[ p ] ys = dist p xs < dist p ys
 
 
-  <[p]-wf : ∀ {p} → Well-founded _<[ p ]_
-  <[p]-wf {p} = Inverse-image.well-founded (dist p) <-well-founded
+  <[p]-wf : ∀ {p} → WellFounded _<[ p ]_
+  <[p]-wf {p} = Inverse-image.wellFounded (dist p) <-wellFounded
 
 
   module _ (p : A → Bool) where

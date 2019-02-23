@@ -21,7 +21,7 @@ module Stream where
   open import Coinduction.WellFounded
 
 
-  StreamC : Set → Container lzero
+  StreamC : Set → Container lzero lzero
   StreamC A = A ▷ (λ _ → ⊤)
 
 

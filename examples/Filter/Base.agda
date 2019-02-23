@@ -1,9 +1,8 @@
 module Filter.Base where
 
 open import Data.Nat using (ℕ ; _<_)
-open import Data.Product
-open import Data.Unit
-open import Level using (Lift ; lift)
+open import Data.Product using (proj₁ ; proj₂ ; _,_)
+open import Data.Unit using (⊤)
 open import Relation.Binary.PropositionalEquality
   using (_≡_ ; _≢_)
 open import Size using (Size ; ↑_)
@@ -11,8 +10,8 @@ open import Size using (Size ; ↑_)
 open import Coinduction.WellFounded
 
 
-StreamC : ∀ {a} → Set a → Container a
-StreamC A = A ▷ (λ _ → Lift ⊤)
+StreamC : ∀ {a} → Set a → Container a _
+StreamC A = A ▷ (λ _ → ⊤)
 
 
 Stream : ∀ {a} → Set a → Size → Set a
@@ -26,7 +25,7 @@ module _ {a} {A : Set a} where
 
 
   tail : ∀ {s} → Stream A (↑ s) → Stream A s
-  tail xs = proj₂ (inf xs) (lift tt)
+  tail xs = proj₂ (inf xs) _
 
 
   cons : ∀ {s} → A → Stream A s → Stream A (↑ s)

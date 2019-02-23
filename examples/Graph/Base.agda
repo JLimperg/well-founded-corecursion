@@ -108,7 +108,7 @@ nu-unfold-contractive c@(var _) = c
 nu-unfold-contractive c@(nu _ c') = subst-preserves-Contractive c' c
 
 
--- Closedness 
+-- Closedness
 
 
 data ClosedWrt : List Var → LoopyTree → Set where
@@ -207,8 +207,8 @@ _<<<_ : Rel LoopyTreeWf lzero
 _<<<_ = _<_ on nu-prefix-length ∘ LoopyTreeWf.tree
 
 
-<<<-wf : Well-founded _<<<_
-<<<-wf = Inverse-image.well-founded _ <-well-founded
+<<<-wf : WellFounded _<<<_
+<<<-wf = Inverse-image.wellFounded _ <-wellFounded
 
 
 nu-unfold-wf : LoopyTreeWf → LoopyTreeWf
@@ -245,7 +245,7 @@ fmap-GraphF f (branch l r) = branch (f l) (f r)
 -- Graphs via M-types
 
 
-GraphMF : Container _
+GraphMF : Container _ _
 GraphMF = Shape ▷ Position
   module _ where
     data Shape : Set where

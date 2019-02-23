@@ -111,8 +111,8 @@ module WithM {a : Level} where
     filter-unfold′ : ∀ xs → filter p xs ≡ filter-body p xs
     filter-unfold′ xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
       where
-        postulate M-ext : M-Extensionality lzero a a ∞
-        postulate ≅-ext : Het.Extensionality a a
+        postulate M-ext : M-Extensionality lzero a lzero ∞
+        postulate ≅-ext : Het.Extensionality lzero a
 
 
     filter-⊆F : ∀ {t}

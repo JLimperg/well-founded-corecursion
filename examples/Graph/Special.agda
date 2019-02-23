@@ -25,7 +25,7 @@ open Graph∞
 
 module _
   {lin l<} {In : Set lin} {_<_ : Rel In l<}
-  (<-wf : Well-founded _<_)
+  (<-wf : WellFounded _<_)
   (F : ∀ {t}
     → (x : In)
     → (In → Graph∞ t)

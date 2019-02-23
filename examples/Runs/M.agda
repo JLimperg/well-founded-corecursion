@@ -7,8 +7,8 @@ open import Data.Nat
 open import Data.Product
 open import Data.Unit using (⊤ ; tt)
 open import Function using (_∘_ ; _on_)
-open import Induction.Nat using (<-well-founded)
-open import Induction.WellFounded using (Well-founded ; module Inverse-image)
+open import Induction.Nat using (<-wellFounded)
+open import Induction.WellFounded using (WellFounded ; module Inverse-image)
 open import Level using () renaming (zero to lzero ; suc to lsuc)
 open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Decidable using (⌊_⌋)
@@ -22,7 +22,6 @@ open import Size
 open import Coinduction.WellFounded
 import Coinduction.WellFounded.Indexed as Ix
 open import Runs.Base
-open import Runs.Nat
 
 
 -- # Well-founded relation
@@ -32,8 +31,8 @@ _<<_ : ∀ {A : Set} → Rel (Stream ℕ ∞ × A) lzero
 _<<_ (xs , _) (ys , _) = head xs < head ys
 
 
-<<-wf : ∀ {A} → Well-founded (_<<_ {A = A})
-<<-wf = Inverse-image.well-founded _ <-well-founded
+<<-wf : ∀ {A} → WellFounded (_<<_ {A = A})
+<<-wf = Inverse-image.wellFounded _ <-wellFounded
 
 
 -- # Definition of runs
@@ -171,8 +170,8 @@ module Internal₁ where
   _<<<_ : ∀ {ys ys′} → In ys → In ys′ → Set
   x <<< y = head (In.xs x) < head (In.xs y)
 
-  <<<-wf : ∀ {ys} → Well-founded {A = In ys} _<<<_
-  <<<-wf = Inverse-image.well-founded _ <-well-founded
+  <<<-wf : ∀ {ys} → WellFounded {A = In ys} _<<<_
+  <<<-wf = Inverse-image.wellFounded _ <-wellFounded
 
   Out : ∀ {ys} → In ys → Stream (List ℕ) ∞
   Out (build-In xs run _ _) = runs′ (xs , run)
