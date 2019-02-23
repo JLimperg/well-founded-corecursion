@@ -1,6 +1,6 @@
 module Coinduction.WellFounded.Indexed where
 
-open import Coinduction.WellFounded.Internal.Container public using
+open import Data.Container.Indexed public using
   ( Container
   ; _◃_/_
   ; ⟦_⟧

@@ -1,12 +1,12 @@
 module Coinduction.WellFounded.Indexed.Internal where
 
 open import Coinduction.WellFounded.Internal.Relation using
-  (Rel ; Setoid ; on-setoid)
-open import Coinduction.WellFounded.Internal.Container as Cont using
+  (IRel ; IndexedSetoid ; on-setoid)
+open import Data.Container.Indexed as Cont using
   (Container ; _◃_/_ ; ⟦_⟧)
 open import Data.Product
 open import Induction.Nat using (<-well-founded)
-open import Induction.WellFounded using (Well-founded ; Acc ; acc)
+open import Induction.WellFounded using (WellFounded ; Acc ; acc)
 open import Level using (_⊔_ ; Level)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; Extensionality)
@@ -36,12 +36,12 @@ open M public
 -- This is sufficient for the purposes of fixM-unfold, but we may need the
 -- generalisation to an arbitrary setoid later.
 ≅F-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) (s : Size)
-  → Setoid O _ _
+  → IndexedSetoid O _ _
 ≅F-setoid C s = Cont.setoid C (Het.indexedSetoid (M C s))
 
 
 ≅M-setoid : ∀ {lo lc lr} {O : Set lo} (C : Container O O lc lr) s {t : Size< s}
-  → Setoid O _ _
+  → IndexedSetoid O _ _
 ≅M-setoid C _ {t} = on-setoid (≅F-setoid C t) (λ x → inf x {t})
 
 
@@ -49,8 +49,8 @@ open M public
 -- between objects of different sizes. I haven't needed this yet and it would
 -- complicate matters somewhat, so I'm leaving the definition as is for now.
 _≅F_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s}
-  → Rel (⟦ C ⟧ (M C s)) _
-_≅F_ {C = C} {s} = Setoid._≈_ (≅F-setoid C s)
+  → IRel (⟦ C ⟧ (M C s)) _
+_≅F_ {C = C} {s} = IndexedSetoid._≈_ (≅F-setoid C s)
 
 
 -- Copied the following from Data.Container.Indexed, where it is sadly
@@ -74,8 +74,8 @@ Eq⇒≅ {xs = c , k} {.c , k′} ext (refl , refl , k≈k′) =
 
 
 _≅M_ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
-  → Rel (M C s) _
-_≅M_ {C = C} {s} = Setoid._≈_ (≅M-setoid C s)
+  → IRel (M C s) _
+_≅M_ {C = C} {s} = IndexedSetoid._≈_ (≅M-setoid C s)
 
 
 -- s and t are arguments of this definition rather than appearing on the
@@ -128,7 +128,7 @@ module _
 module _
   {lo lc lr} {O : Set lo} {C : Container O O lc lr}
   {lin l<} {In : Set lin}
-  {_<_ : In → In → Set l<} (<-wf : Well-founded _<_)
+  {_<_ : In → In → Set l<} (<-wf : WellFounded _<_)
   {P : In → O}
   (F : ∀ {t}
      → (x : In)
@@ -188,7 +188,7 @@ module _
         → F x f g ≅F F x f' g'
       F-ext x {f} {f'} {g} {g'} eq-f eq-g = go
         where
-          module S = Setoid (≅F-setoid C ∞)
+          module S = IndexedSetoid (≅F-setoid C ∞)
 
           ≡-ext : ∀ {a b} → Extensionality a b
           ≡-ext = ≅-ext-to-≡-ext ≅-ext
