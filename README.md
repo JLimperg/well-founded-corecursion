@@ -10,6 +10,10 @@ relatively easy to implement using this library.
 
 ## Tested build configurations
 
+### Version 0.0.5
+
+- Agda 2.6.0; agda-stdlib 1.0
+
 ### Version 0.0.4
 
 - Agda 2.5.4.2; agda-stdlib 0.17
