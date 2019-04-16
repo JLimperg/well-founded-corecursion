@@ -1,5 +1,6 @@
 module Runs.M where
 
+open import Axiom.Extensionality.Propositional using (Extensionality)
 open import Data.Bool using (true ; false ; if_then_else_)
 open import Data.List using (List ; [] ; _∷_ ; [_] ; _∷ʳ_)
 open import Data.Vec as Vec using (Vec ; [] ; _∷_)
@@ -14,7 +15,7 @@ open import Relation.Nullary using (Dec ; yes ; no)
 open import Relation.Nullary.Decidable using (⌊_⌋)
 open import Relation.Binary using (Rel ; Setoid ; Decidable)
 open import Relation.Binary.PropositionalEquality as ≡ using
-  (_≡_ ; refl; Extensionality)
+  (_≡_ ; refl)
 open import Relation.Binary.HeterogeneousEquality using
   (≡-to-≅ ; ≅-to-≡)
 open import Size

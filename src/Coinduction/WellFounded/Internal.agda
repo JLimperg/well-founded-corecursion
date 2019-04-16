@@ -1,15 +1,18 @@
 module Coinduction.WellFounded.Internal where
 
+open import Axiom.Extensionality.Propositional using (Extensionality)
+open import Axiom.Extensionality.Heterogeneous using
+  (≡-ext⇒≅-ext)
 open import Data.Container using (Container ; _▷_ ; ⟦_⟧)
 open import Data.Unit
 open import Induction.WellFounded using (WellFounded)
 open import Level using (Level ; _⊔_) renaming (zero to lzero ; suc to lsuc)
 open import Relation.Binary using (Rel ; Setoid)
 open import Relation.Binary.HeterogeneousEquality as Het using
-  (_≅_ ; ≅-to-≡ ; ≡-ext-to-≅-ext ; ≡-to-≅)
+  (_≅_ ; ≅-to-≡ ; ≡-to-≅)
 open import Relation.Binary.Indexed.Heterogeneous.Construct.At using (_atₛ_)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_ ; refl ; Extensionality)
+  (_≡_ ; refl)
 open import Size using (Size ; Size<_ ; ∞)
 
 open import Coinduction.WellFounded.Indexed as Ix public
@@ -45,7 +48,7 @@ _≅F_ {C = C} {s} = Setoid._≈_ (≅F-setoid C s)
   → Extensionality π (lsuc σ ⊔ lsuc π)
   → x ≅F y
   → x ≡ y
-≅F⇒≡ ≡-ext eq = ≅-to-≡ (Ix.≅F⇒≅ (≡-ext-to-≅-ext ≡-ext) eq)
+≅F⇒≡ ≡-ext eq = ≅-to-≡ (Ix.≅F⇒≅ (≡-ext⇒≅-ext ≡-ext) eq)
 
 
 ≅M-setoid :  ∀ {σ π} (C : Container σ π) (s : Size) {t : Size< s} → Setoid _ _
@@ -117,4 +120,4 @@ module _
     : (∀ {a b} → Extensionality a b)
     → ∀ x
     → inf (cofixWf x) ≡ F x cofixWf (λ y _ → inf (cofixWf y))
-  cofixWf-unfold′ ≡-ext = Ix.cofixWf-unfold′ <-wf F (≡-ext-to-≅-ext ≡-ext)
+  cofixWf-unfold′ ≡-ext = Ix.cofixWf-unfold′ <-wf F (≡-ext⇒≅-ext ≡-ext)

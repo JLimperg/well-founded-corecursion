@@ -1,19 +1,22 @@
 module Coinduction.WellFounded.Indexed.Internal where
 
+open import Axiom.Extensionality.Propositional using (Extensionality)
 open import Coinduction.WellFounded.Internal.Relation using
   (IRel ; IndexedSetoid ; on-setoid)
-open import Data.Container.Indexed as Cont using
+open import Data.Container.Indexed using
   (Container ; _◃_/_ ; ⟦_⟧)
 open import Data.Product
 open import Induction.Nat using (<-well-founded)
 open import Induction.WellFounded using (WellFounded ; Acc ; acc)
 open import Level using (_⊔_ ; Level)
 open import Relation.Binary.PropositionalEquality using
-  (_≡_ ; refl ; Extensionality)
+  (_≡_ ; refl)
 open import Relation.Binary.HeterogeneousEquality as Het using
   (_≅_ ; refl ; ≅-to-≡ ; ≡-to-≅)
 open import Size using (Size ; Size<_ ; ∞)
 
+import Axiom.Extensionality.Heterogeneous as HetExt
+import Data.Container.Indexed.WithK as Cont
 
 
 record M
@@ -58,7 +61,7 @@ _≅F_ {C = C} {s} = IndexedSetoid._≈_ (≅F-setoid C s)
 Eq⇒≅ : ∀ {i o c r ℓ} {I : Set i} {O : Set o}
   → {C : Container I O c r} {X : I → Set ℓ} {o₁ o₂ : O}
   → {xs : ⟦ C ⟧ X o₁} {ys : ⟦ C ⟧ X o₂}
-  → Het.Extensionality r ℓ
+  → HetExt.Extensionality r ℓ
   → Cont.Eq C X X (λ x₁ x₂ → x₁ ≅ x₂) xs ys
   → xs ≅ ys
 Eq⇒≅ {xs = c , k} {.c , k′} ext (refl , refl , k≈k′) =
@@ -67,7 +70,7 @@ Eq⇒≅ {xs = c , k} {.c , k′} ext (refl , refl , k≈k′) =
 
 ≅F⇒≅ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {o₁ o₂}
   → {x : ⟦ C ⟧ (M C s) o₁} {y : ⟦ C ⟧ (M C s) o₂}
-  → Het.Extensionality lr (lo ⊔ lc ⊔ lr)
+  → HetExt.Extensionality lr (lo ⊔ lc ⊔ lr)
   → x ≅F y
   → x ≅ y
 ≅F⇒≅ {C = C} {s} = Eq⇒≅ {X = M C s}
@@ -95,13 +98,13 @@ M-Extensionality lo lc lr s
 ≅M⇒≅ : ∀ {lo lc lr} {O : Set lo} {C : Container O O lc lr} {s} {t : Size< s}
   → ∀ {o₁ o₂} {x : M C s o₁} {y : M C s o₂}
   → M-Extensionality lo lc lr s
-  → Het.Extensionality lr (lo ⊔ lc ⊔ lr)
+  → HetExt.Extensionality lr (lo ⊔ lc ⊔ lr)
   → x ≅M y
   → x ≅ y
 ≅M⇒≅ M-ext ≅-ext eq = M-ext (≅F⇒≅ ≅-ext eq)
 
 
-≅-ext-to-≡-ext : ∀ {a b} → Het.Extensionality a b → Extensionality a b
+≅-ext-to-≡-ext : ∀ {a b} → HetExt.Extensionality a b → Extensionality a b
 ≅-ext-to-≡-ext ≅-ext f-eq
     = ≅-to-≡ (≅-ext (λ _ → refl) (λ x → ≡-to-≅ (f-eq x)))
 
@@ -176,7 +179,7 @@ module _
   -- complicates the implementation considerably, and I don't see a reason for
   -- users to postulate extensionality only at specific levels.
   cofixWf-unfold′
-    : (∀ {a b} → Het.Extensionality a b)
+    : (∀ {a b} → HetExt.Extensionality a b)
     → ∀ x
     → inf (cofixWf x) ≡ F x cofixWf (λ y _ → inf (cofixWf y))
   cofixWf-unfold′ ≅-ext x = ≅-to-≡ (≅F⇒≅ ≅-ext (cofixWf-unfold F-ext x))

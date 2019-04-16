@@ -1,6 +1,5 @@
 module Filter.Properties where
 
-
 open import Data.Bool
 open import Data.Product
 open import Data.Unit
@@ -13,6 +12,8 @@ open import Level using (Level ; lift) renaming (zero to lzero)
 
 open import Filter.Base
 open import Filter.M
+
+import Axiom.Extensionality.Heterogeneous as HetExt
 
 
 module Direct {a} {A : Set a} where
@@ -112,7 +113,7 @@ module WithM {a : Level} where
     filter-unfold′ xs = ≅-to-≡ (≅M⇒≅ M-ext ≅-ext (filter-unfold p xs))
       where
         postulate M-ext : M-Extensionality lzero a lzero ∞
-        postulate ≅-ext : Het.Extensionality lzero a
+        postulate ≅-ext : HetExt.Extensionality lzero a
 
 
     filter-⊆F : ∀ {t}

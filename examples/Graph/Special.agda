@@ -15,7 +15,7 @@ data Graph where
   branch : ∀ {s} → Graph∞ s → Graph∞ s → Graph s
 
 
-record Graph∞ (s : Size) where
+record Graph∞ s where
   coinductive
   field
     force : ∀ {t : Size< s} → Graph t
