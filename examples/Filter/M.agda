@@ -1,13 +1,13 @@
 module Filter.M where
 
-open import Data.Bool
-open import Data.Empty
+open import Data.Bool using (Bool ; true ; false ; T ; if_then_else_)
+open import Data.Empty using (⊥)
 open import Data.Nat using (_<_)
-open import Data.Product
-open import Function
+open import Data.Product using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
+open import Function using (_∘_ ; id)
 open import Induction.Nat using (<-wellFounded)
 open import Induction.WellFounded using (WellFounded ; module Inverse-image)
-open import Relation.Binary
+open import Relation.Binary using (Setoid)
 open import Relation.Binary.PropositionalEquality using
   (_≡_ ; refl ; inspect ; [_] ; Extensionality)
 open import Relation.Binary.HeterogeneousEquality using
