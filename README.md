@@ -10,9 +10,14 @@ relatively easy to implement using this library.
 
 ## Tested build configurations
 
+### Version 0.0.6
+
+- Agda 2.6.0.1; agda-stdlib 1.1
+
 ### Version 0.0.5
 
-- Agda 2.6.0; agda-stdlib 1.0
+- Agda 2.6.0;   agda-stdlib 1.0
+- Agda 2.6.0.1; agda-stdlib 1.1 (excluding examples!)
 
 ### Version 0.0.4
 
