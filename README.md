@@ -13,6 +13,7 @@ relatively easy to implement using this library.
 ### Version 0.0.6
 
 - Agda 2.6.0.1; agda-stdlib 1.1
+- Agda 2.6.0.1; agda-stdlib 1.2
 
 ### Version 0.0.5
 
